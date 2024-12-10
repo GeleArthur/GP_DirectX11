@@ -1,4 +1,10 @@
 #pragma once
+#include "Camera.h"
+
+namespace dae
+{
+	struct Camera;
+}
 
 struct SDL_Window;
 struct SDL_Surface;
@@ -33,9 +39,9 @@ namespace dae
 
 		bool m_IsInitialized{ false };
 
-		//DIRECTX
 		HRESULT InitializeDirectX();
-		//...
+
+		Camera m_Camera{};
 
 		std::vector<Vertex_PosCol> vertices{
 				{{0,0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
