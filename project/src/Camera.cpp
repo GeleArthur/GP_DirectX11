@@ -79,17 +79,17 @@ void dae::Camera::Update(const Timer* pTimer)
 	projectionViewMatrix = invViewMatrix * projectionMatrix;
 }
 
-dae::Matrix<float> dae::Camera::GetViewProjectionMatrix() const
+const dae::Matrix<float>& dae::Camera::GetViewProjectionMatrix() const
 {
 	return projectionViewMatrix;
 }
 
-dae::Matrix<float> dae::Camera::GetViewMatrix() const
+const dae::Matrix<float>& dae::Camera::GetViewMatrix() const
 {
 	return viewMatrix;
 }
 
-dae::Matrix<float> dae::Camera::GetProjectionMatrix() const
+const dae::Matrix<float>& dae::Camera::GetProjectionMatrix() const
 {
 	return projectionMatrix;
 }

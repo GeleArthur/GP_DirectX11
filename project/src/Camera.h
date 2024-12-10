@@ -17,9 +17,9 @@ namespace dae
 		void Initialize(float aspect, float _fovAngle = 90.f, Vector<3,float> _origin = {0.f,0.f,0.f}, float _nearPlane = 1.0f, float _farPlane = 1000.f);
 		void Update(const Timer* pTimer);
 
-		Matrix<float> GetViewProjectionMatrix() const;
-		Matrix<float> GetViewMatrix() const;
-		Matrix<float> GetProjectionMatrix() const;
+		const dae::Matrix<float>& GetViewProjectionMatrix() const;
+		const dae::Matrix<float>& GetViewMatrix() const;
+		const dae::Matrix<float>& GetProjectionMatrix() const;
 		
 		void CalculateViewMatrix();
 

@@ -10,7 +10,7 @@ namespace dae {
 		//Initialize
 		SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
 
-		m_Camera.Initialize(static_cast<float>(m_Width)/ static_cast<float>(m_Height) );
+		m_Camera.Initialize(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-10.0f});
 
 		//Initialize DirectX pipeline
 		const HRESULT result = InitializeDirectX();
@@ -53,6 +53,15 @@ namespace dae {
 		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStecilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0.0f);
 
+		ID3DX11EffectMatrixVariable* projectionMatrix = m_pCurrentEffect->GetVariableByName("gWorldViewProj")->AsMatrix();
+		if (!projectionMatrix->IsValid())
+			return;
+
+		dae::Matrix<float> babyyy = m_Camera.GetViewProjectionMatrix();
+		
+		projectionMatrix->SetMatrix(reinterpret_cast<float*>(&babyyy));
+
+		
 		m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_pDeviceContext->IASetInputLayout(m_pInputLayout); // Source of bad
 
@@ -152,8 +161,8 @@ namespace dae {
 		m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStecilView);
 
 		D3D11_VIEWPORT viewport{};
-		viewport.Width = m_Width;
-		viewport.Height = m_Height;
+		viewport.Width = static_cast<float>(m_Width);
+		viewport.Height = static_cast<float>(m_Height);
 		viewport.TopLeftX = 0.0f;
 		viewport.TopLeftY = 0.0f;
 		viewport.MinDepth = 0.0f;
@@ -165,7 +174,7 @@ namespace dae {
 
 
 
-
+		
 
 
 
