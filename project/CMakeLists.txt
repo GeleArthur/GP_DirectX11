@@ -13,6 +13,10 @@ set(SOURCES
     "src/Timer.cpp"
     "src/Utils.h"
     "src/Vector.h"
+    "src/Effect.h"
+    "src/Effect.cpp"
+    "src/MeshInstance.cpp"
+    "src/MeshInstance.h"
 )
 
 # Create the executable
@@ -23,16 +27,6 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE d3d11.lib dxgi.lib)
 
-# set_source_files_properties(my_text_file.txt PROPERTIES HEADER_FILE_ONLY TRUE)
-
-# find_library(DXGI_LIBRARY dxgi.lib)
-# find_library(D3D11_LIBRARY d3d11.lib)
-# if(DXGI_LIBRARY AND D3D11_LIBRARY)
-#     target_link_libraries(${PROJECT_NAME} PRIVATE ${DXGI_LIBRARY} ${D3D11_LIBRARY})
-# else()
-#     message(FATAL_ERROR "DirectX libraries not found")
-# endif()
-
 
 # Copy resources to output folder
 set(RESOURCES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
@@ -42,14 +36,22 @@ file(GLOB_RECURSE RESOURCE_FILES
     "${RESOURCES_SOURCE_DIR}/*.obj"
     "${RESOURCES_SOURCE_DIR}/*.fx"
 )
-set(RESOURCES_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/resources/")
-file(MAKE_DIRECTORY ${RESOURCES_OUT_DIR})
-foreach(RESOURCE ${RESOURCE_FILES})
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${RESOURCE}
-    ${RESOURCES_OUT_DIR})
-endforeach(RESOURCE)
+# set(RESOURCES_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/resources/")
+# file(MAKE_DIRECTORY ${RESOURCES_OUT_DIR})
+# foreach(RESOURCE ${RESOURCE_FILES})
+#     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E copy ${RESOURCE}
+#     ${RESOURCES_OUT_DIR})
+# endforeach(RESOURCE)
 
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+   COMMAND ${CMAKE_COMMAND} -E create_symlink
+       "${CMAKE_CURRENT_SOURCE_DIR}/Resources"
+       "${CMAKE_CURRENT_BINARY_DIR}/Resources"
+)
+
+
+add_custom_target(Resources ALL SOURCES ${RESOURCE_FILES})
 
 # Simple Directmedia Layer
 set(SDL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs/SDL2-2.30.7")

@@ -1,8 +1,9 @@
 #include "pch.h"
 #include "Renderer.h"
 
-namespace dae {
+#include "Effect.h"
 
+namespace dae {
 	Renderer::Renderer(SDL_Window* pWindow) :
 		m_pWindow(pWindow)
 	{
@@ -30,6 +31,9 @@ namespace dae {
 			m_pDeviceContext->Flush();
 			m_pDeviceContext->Release();
 		}
+
+		m_pCurrentTechnique->Release();
+		m_pCurrentEffect->Release();
 	}
 
 	void Renderer::Update(const Timer* pTimer)
@@ -47,6 +51,24 @@ namespace dae {
 		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStecilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0.0f);
 
+		m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		m_pDeviceContext->IASetInputLayout(m_pInputLayout); // Source of bad
+
+		UINT stride = static_cast<UINT>(sizeof(Vertex_PosCol));
+		UINT offset = 0;
+		
+		m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer,&stride , &offset);
+
+		m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+		D3DX11_TECHNIQUE_DESC techDesc;
+		m_pCurrentTechnique->GetDesc(&techDesc);
+		for (UINT i = 0; i < techDesc.Passes; ++i)
+		{
+			m_pCurrentTechnique->GetPassByIndex(i)->Apply(0, m_pDeviceContext);
+			m_pDeviceContext->DrawIndexed(static_cast<UINT>(indices.size()), 0, 0);
+		}
+		
 		m_pSwapChain->Present(0, 0);
 
 	}
@@ -55,9 +77,7 @@ namespace dae {
 	{
 		D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_1;
 		uint32_t createDeviceFlags = 0;
-#ifdef DEBUG || _DEBUG
 		createDeviceFlags = D3D11_CREATE_DEVICE_DEBUG;
-#endif
 		HRESULT result = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, &featureLevel, 1, D3D11_SDK_VERSION, &m_pDevice, nullptr, &m_pDeviceContext);
 
 		if (FAILED(result))
@@ -141,10 +161,23 @@ namespace dae {
 
 
 
+
+
+
+
+
+
+
+
+
+		
+		m_pCurrentEffect = Effect::LoadEffect(m_pDevice, L"Resources/PosCol3D.fx");
+		m_pCurrentTechnique = m_pCurrentEffect->GetTechniqueByName("DefaultTechnique");
+
 		static constexpr uint32_t numElements{ 2 };
 		D3D11_INPUT_ELEMENT_DESC vertexDesc[numElements]{};
 
-		vertexDesc[0].SemanticName = "POSITION";
+  		vertexDesc[0].SemanticName = "POSITION";
 		vertexDesc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		vertexDesc[0].AlignedByteOffset = 0;
 		vertexDesc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
@@ -154,7 +187,39 @@ namespace dae {
 		vertexDesc[1].AlignedByteOffset = 12;
 		vertexDesc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 
+		D3D11_BUFFER_DESC vertexBufferDesc{};
+		vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+		vertexBufferDesc.ByteWidth = sizeof(Vertex_PosCol) * static_cast<uint32_t>(vertices.size());
+		vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		vertexBufferDesc.CPUAccessFlags = 0;
+		vertexBufferDesc.MiscFlags = 0;
 
+		D3D11_SUBRESOURCE_DATA initData{};
+		initData.pSysMem = vertices.data();
+		result = m_pDevice->CreateBuffer(&vertexBufferDesc, &initData, &m_pVertexBuffer);
+
+		if (FAILED(result))
+			return result;
+
+
+		D3DX11_PASS_DESC passDesc{};
+		m_pCurrentTechnique->GetPassByIndex(0)->GetDesc(&passDesc);
+
+		result = m_pDevice->CreateInputLayout(vertexDesc, numElements, passDesc.pIAInputSignature, passDesc.IAInputSignatureSize, &m_pInputLayout);
+		if (FAILED(result))
+			return result;
+
+		D3D11_BUFFER_DESC indexBufferDesc{};
+		indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+		indexBufferDesc.ByteWidth = sizeof(uint32_t) * static_cast<uint32_t>(indices.size());
+		indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		indexBufferDesc.CPUAccessFlags = 0;
+		indexBufferDesc.MiscFlags = 0;
+		initData.pSysMem = indices.data();
+		result = m_pDevice->CreateBuffer(&indexBufferDesc, &initData, &m_pIndexBuffer);
+
+		if (FAILED(result))
+			return result;
 		
 		return S_OK;
 	}

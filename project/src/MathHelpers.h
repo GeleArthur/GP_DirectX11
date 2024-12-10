@@ -3,13 +3,6 @@
 
 namespace dae
 {
-	/* --- HELPER STRUCTS --- */
-	struct Int2
-	{
-		int x{};
-		int y{};
-	};
-
 	/* --- CONSTANTS --- */
 	constexpr auto PI = 3.14159265358979323846f;
 	constexpr auto PI_DIV_2 = 1.57079632679489661923f;

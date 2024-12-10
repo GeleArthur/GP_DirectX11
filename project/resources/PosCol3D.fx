@@ -1,14 +1,14 @@
 struct VS_INPUT
 {
     float3 Position: POSITION;
-    float Color: COLOR;
-}
+    float3 Color: COLOR;
+};
 
 struct VS_OUTPUT
 {
     float4 Position : SV_POSITION;
     float3 Color : COLOR;
-}
+};
 
 VS_OUTPUT VS(VS_INPUT input)
 {
@@ -16,14 +16,14 @@ VS_OUTPUT VS(VS_INPUT input)
     output.Position = float4(input.Position, 1.f);
     output.Color = input.Color;
     return output;
-}
+};
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
     return float4(input.Color, 1.0f);
-}
+};
 
-technique11 DefaultTechique
+technique11 DefaultTechnique
 {
     pass P0
     {
@@ -31,4 +31,4 @@ technique11 DefaultTechique
         SetGeometryShader(NULL);
         SetPixelShader(CompileShader(ps_5_0, PS()));
     }
-}
+};
