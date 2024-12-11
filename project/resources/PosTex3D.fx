@@ -1,29 +1,41 @@
 struct VS_INPUT
 {
     float3 Position: POSITION;
-    float2 UV: TEXCOORD;
+    float3 Color: COLOR;
+    float2 Uv : TEXCOORD;
 };
 
 struct VS_OUTPUT
 {
     float4 Position : SV_POSITION;
-    float2 UV;
+    float3 Color: COLOR;
+    float2 Uv : TEXCOORD;
 };
 
 float4x4 gWorldViewProj : WorldViewProjection;
 Texture2D gDiffuseMap : DiffuseMap;
+SamplerState gSampleMode;
+
+SamplerState samPoint
+{
+    Filter = ANISOTROPIC;
+    AddressU = Wrap;
+    AddressV = Wrap;
+};
 
 VS_OUTPUT VS(VS_INPUT input)
 {
     VS_OUTPUT output = (VS_OUTPUT)0;
     output.Position = mul(float4(input.Position, 1.f), gWorldViewProj);
-    output.UV = input.UV;
+    output.Color = input.Color;
+    output.Uv = input.Uv;
     return output;
 };
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    return float4(1.0f);
+    float3 rgbColor = gDiffuseMap.Sample(samPoint, input.Uv);
+    return float4(rgbColor, 1.0f);
 };
 
 technique11 DefaultTechnique

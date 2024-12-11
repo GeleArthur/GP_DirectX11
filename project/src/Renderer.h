@@ -2,6 +2,7 @@
 #include "Camera.h"
 #include "EffectTexture.h"
 
+class Texture;
 class EffectTexture;
 
 namespace dae
@@ -11,6 +12,13 @@ namespace dae
 
 struct SDL_Window;
 struct SDL_Surface;
+
+enum class TextureSampleMethod
+{
+	point,
+	linear,
+	anisotropic
+};
 
 namespace dae
 {
@@ -39,11 +47,11 @@ namespace dae
 		HRESULT InitializeDirectX();
 
 		Camera m_Camera{};
-
+		
 		std::vector<Vertex_PosTexture> vertices{
-				{{0,3.0f, 2.0f}, {1.0f, 0.0f}},
-				{{3.0f,-3.0f, 2.0f}, {0.0f, 0.0f}},
-				{{-3.0f,-3.0f, 2.0f}, {0.0f, 1.0f}}
+				{{0,3.0f, 2.0f}, {1.0f, 0.0f, 0.0f} ,{1.0f, 0.0f}},
+				{{3.0f,-3.0f, 2.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+				{{-3.0f,-3.0f, 2.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}
 		};
 
 		std::vector<uint32_t> indices{0,1,2};
@@ -57,5 +65,11 @@ namespace dae
 		ID3D11RenderTargetView* m_pRenderTargetView;
 
 		std::unique_ptr<EffectTexture> m_CurrentEffect;
+		std::unique_ptr<Texture> m_CurrentTexture;
+
+		TextureSampleMethod m_CurrentSampleMode{TextureSampleMethod::anisotropic};
+
+		
+		
 	};
 }

@@ -8,6 +8,7 @@
 struct Vertex_PosTexture
 {
     Vector3 position;
+    Vector3 color;
     Vector2 uv;
 };
 

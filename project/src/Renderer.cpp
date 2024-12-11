@@ -2,6 +2,7 @@
 #include "Renderer.h"
 
 #include "EffectTexture.h"
+#include "Texture.h"
 
 namespace dae {
 	Renderer::Renderer(SDL_Window* pWindow) :
@@ -54,8 +55,12 @@ namespace dae {
 		if (!projectionMatrix->IsValid())
 			return;
 
+		ID3DX11EffectShaderResourceVariable* diffuseMap = m_CurrentEffect->GetEffect()->GetVariableByName("gDiffuseMap")->AsShaderResource();
+		diffuseMap->SetResource(m_CurrentTexture->GetTexture2D());
+
+		
 		// TODO: Rework
-		dae::Matrix<float> babyyy = m_Camera.GetViewProjectionMatrix();
+		Matrix<float> babyyy = m_Camera.GetViewProjectionMatrix();
 		projectionMatrix->SetMatrix(reinterpret_cast<float*>(&babyyy));
 		
 		m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -73,6 +78,10 @@ namespace dae {
 
 		D3DX11_TECHNIQUE_DESC techDesc;
 		m_CurrentEffect->GetTechnique()->GetDesc(&techDesc);
+
+		D3D11_SAMPLER_DESC yeababy{};
+		yeababy.Filter = D3D11_FILTER_ANISOTROPIC;
+		
 		for (UINT i = 0; i < techDesc.Passes; ++i)
 		{
 			m_CurrentEffect->GetTechnique()->GetPassByIndex(i)->Apply(0, m_pDeviceContext);
@@ -170,6 +179,7 @@ namespace dae {
 
 
 		m_CurrentEffect = std::make_unique<EffectTexture>(m_pDevice, vertices, indices);
+		m_CurrentTexture = std::make_unique<Texture>("resources/uv_grid_2.png" ,m_pDevice);
 
 		
 		return S_OK;
