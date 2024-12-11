@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Renderer.h"
 
-#include "Effect.h"
+#include "EffectTexture.h"
 
 namespace dae {
 	Renderer::Renderer(SDL_Window* pWindow) :
@@ -33,9 +33,6 @@ namespace dae {
 			m_pDeviceContext->Flush();
 			m_pDeviceContext->Release();
 		}
-
-		m_pCurrentTechnique->Release();
-		m_pCurrentEffect->Release();
 	}
 
 	void Renderer::Update(const Timer* pTimer)
@@ -53,30 +50,32 @@ namespace dae {
 		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStecilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0.0f);
 
-		ID3DX11EffectMatrixVariable* projectionMatrix = m_pCurrentEffect->GetVariableByName("gWorldViewProj")->AsMatrix();
+		ID3DX11EffectMatrixVariable* projectionMatrix = m_CurrentEffect->GetEffect()->GetVariableByName("gWorldViewProj")->AsMatrix();
 		if (!projectionMatrix->IsValid())
 			return;
 
+		// TODO: Rework
 		dae::Matrix<float> babyyy = m_Camera.GetViewProjectionMatrix();
-		
 		projectionMatrix->SetMatrix(reinterpret_cast<float*>(&babyyy));
-
 		
 		m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		m_pDeviceContext->IASetInputLayout(m_pInputLayout); // Source of bad
+		m_pDeviceContext->IASetInputLayout(m_CurrentEffect->GetInputLayout()); // Source of bad
 
-		UINT stride = static_cast<UINT>(sizeof(Vertex_PosCol));
-		UINT offset = 0;
+		constexpr UINT stride = static_cast<UINT>(sizeof(Vertex_PosTexture));
+		constexpr UINT offset = 0;
+
 		
-		m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer,&stride , &offset);
+		ID3D11Buffer* vertexBuffer = m_CurrentEffect->GetVertexBuffer();
+		m_pDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer,&stride , &offset);
 
-		m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		ID3D11Buffer* indexBuffer = m_CurrentEffect->GetIndexBuffer();
+		m_pDeviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 		D3DX11_TECHNIQUE_DESC techDesc;
-		m_pCurrentTechnique->GetDesc(&techDesc);
+		m_CurrentEffect->GetTechnique()->GetDesc(&techDesc);
 		for (UINT i = 0; i < techDesc.Passes; ++i)
 		{
-			m_pCurrentTechnique->GetPassByIndex(i)->Apply(0, m_pDeviceContext);
+			m_CurrentEffect->GetTechnique()->GetPassByIndex(i)->Apply(0, m_pDeviceContext);
 			m_pDeviceContext->DrawIndexed(static_cast<UINT>(indices.size()), 0, 0);
 		}
 		
@@ -170,67 +169,8 @@ namespace dae {
 		m_pDeviceContext->RSSetViewports(1, &viewport);
 
 
+		m_CurrentEffect = std::make_unique<EffectTexture>(m_pDevice, vertices, indices);
 
-
-
-
-		
-
-
-
-
-
-
-		
-		m_pCurrentEffect = Effect::LoadEffect(m_pDevice, L"Resources/PosCol3D.fx");
-		m_pCurrentTechnique = m_pCurrentEffect->GetTechniqueByName("DefaultTechnique");
-
-		static constexpr uint32_t numElements{ 2 };
-		D3D11_INPUT_ELEMENT_DESC vertexDesc[numElements]{};
-
-  		vertexDesc[0].SemanticName = "POSITION";
-		vertexDesc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		vertexDesc[0].AlignedByteOffset = 0;
-		vertexDesc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-
-		vertexDesc[1].SemanticName = "COLOR";
-		vertexDesc[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		vertexDesc[1].AlignedByteOffset = 12;
-		vertexDesc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-
-		D3D11_BUFFER_DESC vertexBufferDesc{};
-		vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-		vertexBufferDesc.ByteWidth = sizeof(Vertex_PosCol) * static_cast<uint32_t>(vertices.size());
-		vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		vertexBufferDesc.CPUAccessFlags = 0;
-		vertexBufferDesc.MiscFlags = 0;
-
-		D3D11_SUBRESOURCE_DATA initData{};
-		initData.pSysMem = vertices.data();
-		result = m_pDevice->CreateBuffer(&vertexBufferDesc, &initData, &m_pVertexBuffer);
-
-		if (FAILED(result))
-			return result;
-
-
-		D3DX11_PASS_DESC passDesc{};
-		m_pCurrentTechnique->GetPassByIndex(0)->GetDesc(&passDesc);
-
-		result = m_pDevice->CreateInputLayout(vertexDesc, numElements, passDesc.pIAInputSignature, passDesc.IAInputSignatureSize, &m_pInputLayout);
-		if (FAILED(result))
-			return result;
-
-		D3D11_BUFFER_DESC indexBufferDesc{};
-		indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-		indexBufferDesc.ByteWidth = sizeof(uint32_t) * static_cast<uint32_t>(indices.size());
-		indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		indexBufferDesc.CPUAccessFlags = 0;
-		indexBufferDesc.MiscFlags = 0;
-		initData.pSysMem = indices.data();
-		result = m_pDevice->CreateBuffer(&indexBufferDesc, &initData, &m_pIndexBuffer);
-
-		if (FAILED(result))
-			return result;
 		
 		return S_OK;
 	}

@@ -13,12 +13,14 @@ set(SOURCES
     "src/Timer.cpp"
     "src/Utils.h"
     "src/Vector.h"
-    "src/Effect.h"
-    "src/Effect.cpp"
+    "src/EffectTexture.h"
+    "src/EffectTexture.cpp"
     "src/MeshInstance.cpp"
     "src/MeshInstance.h"
     "src/Camera.h"
     "src/Camera.cpp"
+    "src/Texture.h"
+    "src/Texture.cpp"
 )
 
 # Create the executable

@@ -1,4 +1,6 @@
 #pragma once
+#include <algorithm>
+
 #include "MathHelpers.h"
 
 namespace dae
@@ -11,7 +13,7 @@ namespace dae
 
 		void MaxToOne()
 		{
-			const float maxValue = std::max(r, std::max(g, b));
+			const float maxValue = std::max({r, g, b});
 			if (maxValue > 1.f)
 				*this /= maxValue;
 		}
