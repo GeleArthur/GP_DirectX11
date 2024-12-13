@@ -2,7 +2,11 @@
 #include "Renderer.h"
 
 #include "EffectTexture.h"
+#include "magic_enum.hpp"
 #include "Texture.h"
+#include "Utils.h"
+
+extern ID3D11Debug* d3d11Debug;
 
 namespace dae {
 	Renderer::Renderer(SDL_Window* pWindow) :
@@ -28,12 +32,26 @@ namespace dae {
 
 	Renderer::~Renderer()
 	{
+		m_pLinearMode->Release();
+		m_pAnisotropicMode->Release();
+		m_pPointMode->Release();
+		m_pDepthStecilBuffer->Release();
+		m_pDepthStecilView->Release();
+		m_pRenderTargetBuffer->Release();
+		m_pRenderTargetView->Release();
+		m_pSwapChain->Release();
+
+		
 		if (m_pDeviceContext)
 		{
 			m_pDeviceContext->ClearState();
 			m_pDeviceContext->Flush();
 			m_pDeviceContext->Release();
 		}
+
+		m_pDevice->Release();
+
+
 	}
 
 	void Renderer::Update(const Timer* pTimer)
@@ -50,18 +68,35 @@ namespace dae {
 		constexpr float color[4] = { 0.0f, 0.0f, 0.3f, 1.0f };
 		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStecilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0.0f);
-
-		ID3DX11EffectMatrixVariable* projectionMatrix = m_CurrentEffect->GetEffect()->GetVariableByName("gWorldViewProj")->AsMatrix();
-		if (!projectionMatrix->IsValid())
+		
+		auto sampler = m_CurrentEffect->GetEffect()->GetVariableByName("gSampleMode")->AsSampler();
+		if (!sampler->IsValid())
 			return;
+
+		switch (m_CurrentSampleMode)
+		{
+		case TextureSampleMethod::point:
+			sampler->SetSampler(0, m_pPointMode);
+			break;
+		case TextureSampleMethod::linear:
+			sampler->SetSampler(0, m_pLinearMode);
+			break;
+		case TextureSampleMethod::anisotropic:
+			sampler->SetSampler(0, m_pAnisotropicMode);
+			break;
+		}
+		
+
 
 		ID3DX11EffectShaderResourceVariable* diffuseMap = m_CurrentEffect->GetEffect()->GetVariableByName("gDiffuseMap")->AsShaderResource();
 		diffuseMap->SetResource(m_CurrentTexture->GetTexture2D());
 
 		
-		// TODO: Rework
-		Matrix<float> babyyy = m_Camera.GetViewProjectionMatrix();
-		projectionMatrix->SetMatrix(reinterpret_cast<float*>(&babyyy));
+		ID3DX11EffectMatrixVariable* projectionMatrix = m_CurrentEffect->GetEffect()->GetVariableByName("gWorldViewProj")->AsMatrix();
+		if (!projectionMatrix->IsValid())
+			return;
+		
+		projectionMatrix->SetMatrix((m_Camera.GetViewProjectionMatrixAsFloatArray()));
 		
 		m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_pDeviceContext->IASetInputLayout(m_CurrentEffect->GetInputLayout()); // Source of bad
@@ -79,17 +114,35 @@ namespace dae {
 		D3DX11_TECHNIQUE_DESC techDesc;
 		m_CurrentEffect->GetTechnique()->GetDesc(&techDesc);
 
-		D3D11_SAMPLER_DESC yeababy{};
-		yeababy.Filter = D3D11_FILTER_ANISOTROPIC;
-		
 		for (UINT i = 0; i < techDesc.Passes; ++i)
 		{
-			m_CurrentEffect->GetTechnique()->GetPassByIndex(i)->Apply(0, m_pDeviceContext);
-			m_pDeviceContext->DrawIndexed(static_cast<UINT>(indices.size()), 0, 0);
+			ID3DX11EffectPass* index = m_CurrentEffect->GetTechnique()->GetPassByIndex(i);
+			index->Apply(0, m_pDeviceContext);
+			m_pDeviceContext->DrawIndexed(static_cast<UINT>(indicies.size()), 0, 0);
+			index->Release();
 		}
 		
 		m_pSwapChain->Present(0, 0);
 
+	}
+
+	void Renderer::ToggleSampleMode()
+	{
+		switch (m_CurrentSampleMode)
+		{
+		case TextureSampleMethod::point:
+			m_CurrentSampleMode = TextureSampleMethod::linear;
+			break;
+		case TextureSampleMethod::linear:
+			m_CurrentSampleMode = TextureSampleMethod::anisotropic;
+			break;
+		case TextureSampleMethod::anisotropic:
+			m_CurrentSampleMode = TextureSampleMethod::point;
+			break;
+		}
+
+		std::cout << "Using: " << magic_enum::enum_name(m_CurrentSampleMode) << std::endl;
+		
 	}
 
 	HRESULT Renderer::InitializeDirectX()
@@ -98,6 +151,9 @@ namespace dae {
 		uint32_t createDeviceFlags = 0;
 		createDeviceFlags = D3D11_CREATE_DEVICE_DEBUG;
 		HRESULT result = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, &featureLevel, 1, D3D11_SDK_VERSION, &m_pDevice, nullptr, &m_pDeviceContext);
+
+
+		m_pDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&d3d11Debug));
 
 		if (FAILED(result))
 			return result;
@@ -178,10 +234,39 @@ namespace dae {
 		m_pDeviceContext->RSSetViewports(1, &viewport);
 
 
-		m_CurrentEffect = std::make_unique<EffectTexture>(m_pDevice, vertices, indices);
-		m_CurrentTexture = std::make_unique<Texture>("resources/uv_grid_2.png" ,m_pDevice);
+		Utils::ParseOBJ("resources/vehicle.obj", verties, indicies);
 
+
+		m_CurrentEffect = std::make_unique<EffectTexture>(m_pDevice, verties, indicies);
+		m_CurrentTexture = std::make_unique<Texture>("resources/vehicle_diffuse.png" ,m_pDevice);
+
+		D3D11_SAMPLER_DESC config{};
+		config.Filter = D3D11_FILTER_ANISOTROPIC;
+		config.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		config.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		config.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		config.MipLODBias = 0.0f;
+		config.MaxAnisotropy = 16; // Set according to your needs, typical values are 1-16.
+		config.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+		config.BorderColor[0] = 0.0f; // RGBA for border color
+		config.BorderColor[1] = 0.0f;
+		config.BorderColor[2] = 0.0f;
+		config.BorderColor[3] = 0.0f;
+		config.MinLOD = 0.0f;
+		config.MaxLOD = D3D11_FLOAT32_MAX;
 		
+		config.Filter = D3D11_FILTER_ANISOTROPIC;
+		result = m_pDevice->CreateSamplerState(&config, &m_pAnisotropicMode);
+		
+		config.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+		result = m_pDevice->CreateSamplerState(&config, &m_pPointMode);
+		
+		config.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		result = m_pDevice->CreateSamplerState(&config, &m_pLinearMode);
+
+
+
+
 		return S_OK;
 	}
 }

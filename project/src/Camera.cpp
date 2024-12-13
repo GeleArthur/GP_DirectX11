@@ -84,6 +84,11 @@ const dae::Matrix<float>& dae::Camera::GetViewProjectionMatrix() const
 	return projectionViewMatrix;
 }
 
+const float* dae::Camera::GetViewProjectionMatrixAsFloatArray() const
+{
+	return reinterpret_cast<const float*>(&projectionViewMatrix);
+}
+
 const dae::Matrix<float>& dae::Camera::GetViewMatrix() const
 {
 	return viewMatrix;

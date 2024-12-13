@@ -16,12 +16,12 @@ float4x4 gWorldViewProj : WorldViewProjection;
 Texture2D gDiffuseMap : DiffuseMap;
 SamplerState gSampleMode;
 
-SamplerState samPoint
-{
-    Filter = ANISOTROPIC;
-    AddressU = Wrap;
-    AddressV = Wrap;
-};
+// SamplerState samPoint
+// {
+//     Filter = ANISOTROPIC;
+//     AddressU = Wrap;
+//     AddressV = Wrap;
+// };
 
 VS_OUTPUT VS(VS_INPUT input)
 {
@@ -34,7 +34,7 @@ VS_OUTPUT VS(VS_INPUT input)
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    float3 rgbColor = gDiffuseMap.Sample(samPoint, input.Uv);
+    float3 rgbColor = gDiffuseMap.Sample(gSampleMode, input.Uv);
     return float4(rgbColor, 1.0f);
 };
 

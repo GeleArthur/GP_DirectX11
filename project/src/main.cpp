@@ -15,6 +15,8 @@ void ShutDown(SDL_Window* pWindow)
 	SDL_Quit();
 }
 
+ID3D11Debug* d3d11Debug;
+
 int main(int argc, char* args[])
 {
 	//Unreferenced parameters
@@ -56,6 +58,10 @@ int main(int argc, char* args[])
 				isLooping = false;
 				break;
 			case SDL_KEYUP:
+				if (e.key.keysym.scancode == SDL_SCANCODE_F2)
+				{
+					pRenderer->ToggleSampleMode();
+				}
 				//Test for a key
 				//if (e.key.keysym.scancode == SDL_SCANCODE_X)
 				break;
@@ -83,6 +89,10 @@ int main(int argc, char* args[])
 	//Shutdown "framework"
 	delete pRenderer;
 	delete pTimer;
+
+	d3d11Debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
+
+	d3d11Debug->Release();
 
 	ShutDown(pWindow);
 	return 0;

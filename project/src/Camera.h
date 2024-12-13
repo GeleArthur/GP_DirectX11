@@ -18,6 +18,7 @@ namespace dae
 		void Update(const Timer* pTimer);
 
 		const dae::Matrix<float>& GetViewProjectionMatrix() const;
+		const float* GetViewProjectionMatrixAsFloatArray() const;
 		const dae::Matrix<float>& GetViewMatrix() const;
 		const dae::Matrix<float>& GetProjectionMatrix() const;
 		
@@ -34,7 +35,7 @@ namespace dae
 
 		float totalPitch{};
 		float totalYaw{};
-		float speed{1};
+		float speed{10};
 
 		Matrix<float> invViewMatrix{};
 		Matrix<float> viewMatrix{};

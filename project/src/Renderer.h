@@ -35,6 +35,7 @@ namespace dae
 
 		void Update(const Timer* pTimer);
 		void Render() const;
+		void ToggleSampleMode();
 
 	private:
 		SDL_Window* m_pWindow{};
@@ -43,18 +44,22 @@ namespace dae
 		int m_Height{};
 
 		bool m_IsInitialized{ false };
+		//ID3D11Debug* d3d11Debug;
 
 		HRESULT InitializeDirectX();
 
 		Camera m_Camera{};
 		
-		std::vector<Vertex_PosTexture> vertices{
-				{{0,3.0f, 2.0f}, {1.0f, 0.0f, 0.0f} ,{1.0f, 0.0f}},
-				{{3.0f,-3.0f, 2.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-				{{-3.0f,-3.0f, 2.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}
-		};
+		//std::vector<Vertex_PosTexture> vertices{
+		//		{{0,3.0f, 2.0f}, {1.0f, 0.0f, 0.0f} ,{1.0f, 0.0f}},
+		//		{{3.0f,-3.0f, 2.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+		//		{{-3.0f,-3.0f, 2.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}
+		//};
 
-		std::vector<uint32_t> indices{0,1,2};
+		//std::vector<uint32_t> indices{0,1,2};
+
+		std::vector<Vertex_PosTexture> verties;
+		std::vector<uint32_t> indicies;
 
 		ID3D11Device* m_pDevice;
 		ID3D11DeviceContext* m_pDeviceContext;
@@ -69,7 +74,10 @@ namespace dae
 
 		TextureSampleMethod m_CurrentSampleMode{TextureSampleMethod::anisotropic};
 
-		
+		ID3D11SamplerState* m_pLinearMode{};
+		ID3D11SamplerState* m_pPointMode{};
+		ID3D11SamplerState* m_pAnisotropicMode{};
+
 		
 	};
 }

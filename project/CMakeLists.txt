@@ -12,6 +12,7 @@ set(SOURCES
     "src/Timer.h"
     "src/Timer.cpp"
     "src/Utils.h"
+    "src/Utils.cpp"
     "src/Vector.h"
     "src/EffectTexture.h"
     "src/EffectTexture.cpp"
@@ -21,6 +22,7 @@ set(SOURCES
     "src/Camera.cpp"
     "src/Texture.h"
     "src/Texture.cpp"
+    "src/magic_enum.hpp"
 )
 
 # Create the executable
