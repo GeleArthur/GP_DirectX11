@@ -22,3 +22,5 @@ bld/
 !project/libs/**
 build
 out
+cmake-build-debug
+.idea

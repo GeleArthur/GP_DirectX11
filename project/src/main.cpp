@@ -90,7 +90,7 @@ int main(int argc, char* args[])
 	delete pRenderer;
 	delete pTimer;
 
-	d3d11Debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
+	//d3d11Debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
 
 	d3d11Debug->Release();
 

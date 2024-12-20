@@ -3,7 +3,7 @@
 void dae::Camera::Initialize(float aspect, float _fovAngle, Vector<3,float> _origin, float _nearPlane, float _farPlane)
 {
 	fovAngle = _fovAngle;
-	fov = tanf((fovAngle * TO_RADIANS) / 2.f);
+	fov = tanf((fovAngle * Utils::TO_RADIANS) / 2.f);
 	nearPlane = _nearPlane;
 	farPlane = _farPlane;
 	origin = _origin;

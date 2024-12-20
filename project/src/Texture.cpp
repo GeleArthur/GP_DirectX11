@@ -7,16 +7,19 @@
 
 Texture::Texture(const std::string& fileName, ID3D11Device* pDevice)
 {
-    SDL_Surface* pSurface = IMG_Load(fileName.c_str());
-    if (pSurface == nullptr)
+    m_pSurface = IMG_Load(fileName.c_str());
+    if (m_pSurface == nullptr)
     {
         std::cerr << "Can't find texture\n";
+        return;
     }
+
+    m_pSurfacePixels = static_cast<uint32_t*>(m_pSurface->pixels);
 
     DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
     D3D11_TEXTURE2D_DESC desc{};
-    desc.Width = pSurface->w;
-    desc.Height = pSurface->h;
+    desc.Width = m_pSurface->w;
+    desc.Height = m_pSurface->h;
     desc.MipLevels = 1;
     desc.ArraySize = 1;
     desc.Format = format;
@@ -28,9 +31,9 @@ Texture::Texture(const std::string& fileName, ID3D11Device* pDevice)
     desc.MiscFlags = 0;
 
     D3D11_SUBRESOURCE_DATA initData{};
-    initData.pSysMem = pSurface->pixels;
-    initData.SysMemPitch = static_cast<UINT>(pSurface->pitch);
-    initData.SysMemSlicePitch = static_cast<UINT>(pSurface->h * pSurface->pitch);
+    initData.pSysMem = m_pSurface->pixels;
+    initData.SysMemPitch = static_cast<UINT>(m_pSurface->pitch);
+    initData.SysMemSlicePitch = static_cast<UINT>(m_pSurface->h * m_pSurface->pitch);
     
     HRESULT result = pDevice->CreateTexture2D(&desc, &initData, &m_pResource);
     if (FAILED(result))
@@ -44,16 +47,27 @@ Texture::Texture(const std::string& fileName, ID3D11Device* pDevice)
     result = pDevice->CreateShaderResourceView(m_pResource, &SRVDesc, &m_pSRV);
 
     
-    SDL_FreeSurface(pSurface);
+    SDL_FreeSurface(m_pSurface);
 }
 
 Texture::~Texture()
 {
     m_pSRV->Release();
     m_pResource->Release();
+    SDL_FreeSurface(m_pSurface);
 }
 
-ID3D11ShaderResourceView* Texture::GetTexture2D() const
+ID3D11ShaderResourceView* Texture::D3D11GetTexture2D() const
 {
     return m_pSRV;
+}
+
+ColorRGB Texture::Sample(const Vector2 *uvCoord, bool normalMap) const
+{
+    Uint8 red, green, blue;
+    const Vector2 pixel = {std::clamp(0.0f, 1.0f, uvCoord->x), std::clamp(0.0f, 1.0f, uvCoord->y)};
+
+    SDL_GetRGB(static_cast<int>(pixel.x * static_cast<float>(m_pSurface->w - 1) + (pixel.y * static_cast<float>(m_pSurface->h - 1)) * static_cast<float>(m_pSurface->w)), m_pSurface->format, &red, &green, &blue );
+
+    return ColorRGB{static_cast<float>(red) / 255.0f, static_cast<float>(green) / 255.0f, static_cast<float>(blue) / (normalMap ? 255.0f : 128.0f)};
 }

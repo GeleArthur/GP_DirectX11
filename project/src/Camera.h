@@ -6,6 +6,7 @@
 
 #include "Math.h"
 #include "Timer.h"
+#include "Utils.h"
 
 namespace dae
 {
@@ -27,7 +28,7 @@ namespace dae
 	private:
 		Vector<3,float> origin{};
 		float fovAngle{90.f};
-		float fov{ tanf((fovAngle * TO_RADIANS) / 2.f) };
+		float fov{ tanf((fovAngle * Utils::TO_RADIANS) / 2.f) };
 
 		Vector<3,float> forward{Vector<3,float>::UnitZ};
 		Vector<3,float> up{Vector<3,float>::UnitY};

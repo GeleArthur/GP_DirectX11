@@ -35,10 +35,10 @@ namespace dae {
 		m_pLinearMode->Release();
 		m_pAnisotropicMode->Release();
 		m_pPointMode->Release();
-		m_pDepthStecilBuffer->Release();
 		m_pDepthStecilView->Release();
-		m_pRenderTargetBuffer->Release();
+		m_pDepthStecilBuffer->Release();
 		m_pRenderTargetView->Release();
+		m_pRenderTargetBuffer->Release();
 		m_pSwapChain->Release();
 
 		
@@ -89,7 +89,7 @@ namespace dae {
 
 
 		ID3DX11EffectShaderResourceVariable* diffuseMap = m_CurrentEffect->GetEffect()->GetVariableByName("gDiffuseMap")->AsShaderResource();
-		diffuseMap->SetResource(m_CurrentTexture->GetTexture2D());
+		diffuseMap->SetResource(m_CurrentTexture->D3D11GetTexture2D());
 
 		
 		ID3DX11EffectMatrixVariable* projectionMatrix = m_CurrentEffect->GetEffect()->GetVariableByName("gWorldViewProj")->AsMatrix();

@@ -71,11 +71,7 @@ EffectTexture::~EffectTexture()
     m_pVertexBuffer->Release();
     m_pIndexBuffer->Release();
     m_pInputLayout->Release();
-
-    m_pCurrentTechnique->Release();
-    m_pCurrentTechnique->Release();
-    m_pCurrentTechnique->Release();
-    m_pCurrentTechnique->Release();
+    
     m_pCurrentTechnique->Release();
     m_pCurrentEffect->Release();
 
