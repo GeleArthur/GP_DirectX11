@@ -4,9 +4,10 @@
 #include <SDL_keyboard.h>
 #include <SDL_mouse.h>
 
-#include "Math.h"
 #include "Timer.h"
 #include "Utils.h"
+#include "Vector.h"
+#include "Matrix.h"
 
 namespace dae
 {

@@ -1,8 +1,8 @@
 # Source files
 set(SOURCES
         "src/ColorRGB.h"
+        "src/ColorRGB.cpp"
         "src/main.cpp"
-        "src/Math.h"
         "src/Matrix.h"
         "src/pch.cpp"
         "src/pch.h"
@@ -22,13 +22,11 @@ set(SOURCES
         "src/Texture.h"
         "src/Texture.cpp"
         "src/magic_enum.hpp"
-        "src/BaseMesh.h"
+        "src/BaseMeshEffect.h"
         "src/DiffuseMesh.h"
         "src/DiffuseMesh.cpp"
-        "src/Scene.h"
-        "src/Scene.cpp"
-        src/ColorRGB.cpp
-
+        "src/BaseMeshEffect.cpp"
+        "src/AllEffects.h"
 )
 
 # Create the executable

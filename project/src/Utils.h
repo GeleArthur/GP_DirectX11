@@ -2,7 +2,6 @@
 #include <fstream>
 #include <vector>
 
-#include "Math.h"
 
 struct Vertex_PosTexture;
 
@@ -21,36 +20,41 @@ namespace Utils
 	constexpr auto TO_RADIANS(PI / 180.0f);
 
 	/* --- HELPER FUNCTIONS --- */
-	inline float Square(float a)
+	template<typename  T>
+	float Square(const T a)
 	{
 		return a * a;
 	}
 
-	inline float Lerpf(float a, float b, float factor)
+	template<typename  T>
+	float Lerpf(const T a,const T b,const T factor)
 	{
 		return ((1 - factor) * a) + (factor * b);
 	}
 
-	inline bool AreEqual(float a, float b, float epsilon = FLT_EPSILON)
+	template<typename  T>
+	bool AreEqual(T a, T b, float epsilon = FLT_EPSILON)
 	{
 		return abs(a - b) < epsilon;
 	}
 
-	inline int Clamp(const int v, int min, int max)
+	template<typename  T>
+	int Clamp(const T v, const T min, const T max)
+	{
+		if (v < min) return min;
+		if (v > max) return max;
+		return v;
+	}
+	template<typename T>
+	float Clamp(const T v, const T min, const T max)
 	{
 		if (v < min) return min;
 		if (v > max) return max;
 		return v;
 	}
 
-	inline float Clamp(const float v, float min, float max)
-	{
-		if (v < min) return min;
-		if (v > max) return max;
-		return v;
-	}
-
-	inline float Saturate(const float v)
+	template<typename T>
+	float Saturate(const T v)
 	{
 		if (v < 0.f) return 0.f;
 		if (v > 1.f) return 1.f;

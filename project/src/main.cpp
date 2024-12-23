@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if defined(_DEBUG)
+#ifndef NDEBUG
 #include "vld.h"
 #endif
 

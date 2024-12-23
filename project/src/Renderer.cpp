@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Renderer.h"
 
+#include "DiffuseMesh.h"
 #include "EffectTexture.h"
 #include "magic_enum.hpp"
 #include "Texture.h"
@@ -264,7 +265,8 @@ namespace dae {
 		config.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 		result = m_pDevice->CreateSamplerState(&config, &m_pLinearMode);
 
-
+		DiffuseMesh great(m_pDevice);
+		DiffuseMesh great2(m_pDevice);
 
 
 		return S_OK;

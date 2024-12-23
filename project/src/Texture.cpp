@@ -45,9 +45,6 @@ Texture::Texture(const std::string& fileName, ID3D11Device* pDevice)
     SRVDesc.Texture2D.MipLevels = 1;
 
     result = pDevice->CreateShaderResourceView(m_pResource, &SRVDesc, &m_pSRV);
-
-    
-    SDL_FreeSurface(m_pSurface);
 }
 
 Texture::~Texture()

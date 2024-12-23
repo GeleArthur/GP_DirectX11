@@ -1,8 +1,6 @@
 ﻿#include "ColorRGB.h"
 #include "Utils.h"
 
-using namespace Utils;
-
 
 void ColorRGB::MaxToOne() {
     const float maxValue = std::max({r, g, b});
@@ -11,7 +9,7 @@ void ColorRGB::MaxToOne() {
 }
 
 ColorRGB ColorRGB::Lerp(const ColorRGB &c1, const ColorRGB &c2, const float factor) {
-    return {Lerpf(c1.r, c2.r, factor), Lerpf(c1.g, c2.g, factor), Lerpf(c1.b, c2.b, factor)};
+    return {Utils::Lerpf(c1.r, c2.r, factor), Utils::Lerpf(c1.g, c2.g, factor), Utils::Lerpf(c1.b, c2.b, factor)};
 }
 
 const ColorRGB &ColorRGB::operator+=(const ColorRGB &c) {

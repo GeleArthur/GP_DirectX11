@@ -1,5 +1,5 @@
 #include "Utils.h"
-
+#include <iostream>
 #include "EffectTexture.h"
 
 bool Utils::ParseOBJ(const std::string& filename, std::vector<Vertex_PosTexture>& vertices, std::vector<uint32_t>& indices, bool flipAxisAndWinding)
