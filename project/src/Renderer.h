@@ -1,15 +1,13 @@
 #pragma once
 #include "Camera.h"
 #include "EffectTexture.h"
+#include "Scene.h"
 
+class BaseMeshEffect;
 class Texture;
 class EffectTexture;
 
-namespace dae
-{
-	struct Camera;
-}
-
+struct Camera;
 struct SDL_Window;
 struct SDL_Surface;
 
@@ -25,7 +23,7 @@ namespace dae
 	class Renderer final
 	{
 	public:
-		Renderer(SDL_Window* pWindow);
+		explicit Renderer(SDL_Window* pWindow);
 		~Renderer();
 
 		Renderer(const Renderer&) = delete;
@@ -38,25 +36,18 @@ namespace dae
 		void ToggleSampleMode();
 
 	private:
+		HRESULT InitializeDirectX();
+
+
 		SDL_Window* m_pWindow{};
 
 		int m_Width{};
 		int m_Height{};
 
 		bool m_IsInitialized{ false };
-		//ID3D11Debug* d3d11Debug;
-
-		HRESULT InitializeDirectX();
 
 		Camera m_Camera{};
-		
-		//std::vector<Vertex_PosTexture> vertices{
-		//		{{0,3.0f, 2.0f}, {1.0f, 0.0f, 0.0f} ,{1.0f, 0.0f}},
-		//		{{3.0f,-3.0f, 2.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-		//		{{-3.0f,-3.0f, 2.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}
-		//};
-
-		//std::vector<uint32_t> indices{0,1,2};
+		Scene m_activeScene{};
 
 		std::vector<Vertex_PosTexture> verties;
 		std::vector<uint32_t> indicies;
@@ -77,7 +68,5 @@ namespace dae
 		ID3D11SamplerState* m_pLinearMode{};
 		ID3D11SamplerState* m_pPointMode{};
 		ID3D11SamplerState* m_pAnisotropicMode{};
-
-		
 	};
 }

@@ -29,6 +29,10 @@ namespace dae {
 		{
 			std::cout << "DirectX initialization failed!\n";
 		}
+
+		auto coolMesh{std::make_unique<DiffuseMesh>(m_pDevice)};
+
+		m_activeScene.AddMesh(std::move(coolMesh));
 	}
 
 	Renderer::~Renderer()

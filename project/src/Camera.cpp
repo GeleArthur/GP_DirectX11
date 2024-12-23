@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-void dae::Camera::Initialize(float aspect, float _fovAngle, Vector<3,float> _origin, float _nearPlane, float _farPlane)
+void Camera::Initialize(float aspect, float _fovAngle, Vector<3,float> _origin, float _nearPlane, float _farPlane)
 {
 	fovAngle = _fovAngle;
 	fov = tanf((fovAngle * Utils::TO_RADIANS) / 2.f);
@@ -13,7 +13,7 @@ void dae::Camera::Initialize(float aspect, float _fovAngle, Vector<3,float> _ori
 	
 }
 
-void dae::Camera::CalculateViewMatrix()
+void Camera::CalculateViewMatrix()
 {
 	right = Vector<3,float>::Cross(Vector<3,float>::UnitY, forward).Normalized();
 	up = Vector<3,float>::Cross(forward, right).Normalized();
@@ -28,7 +28,7 @@ void dae::Camera::CalculateViewMatrix()
 	invViewMatrix = viewMatrix.Inverse();
 }
 
-void dae::Camera::Update(const Timer* pTimer)
+void Camera::Update(const Timer* pTimer)
 {
 	const float deltaTime = pTimer->GetElapsed();
 
@@ -79,22 +79,22 @@ void dae::Camera::Update(const Timer* pTimer)
 	projectionViewMatrix = invViewMatrix * projectionMatrix;
 }
 
-const dae::Matrix<float>& dae::Camera::GetViewProjectionMatrix() const
+const Matrix<float>& Camera::GetViewProjectionMatrix() const
 {
 	return projectionViewMatrix;
 }
 
-const float* dae::Camera::GetViewProjectionMatrixAsFloatArray() const
+const float* Camera::GetViewProjectionMatrixAsFloatArray() const
 {
 	return reinterpret_cast<const float*>(&projectionViewMatrix);
 }
 
-const dae::Matrix<float>& dae::Camera::GetViewMatrix() const
+const Matrix<float>& Camera::GetViewMatrix() const
 {
 	return viewMatrix;
 }
 
-const dae::Matrix<float>& dae::Camera::GetProjectionMatrix() const
+const Matrix<float>& Camera::GetProjectionMatrix() const
 {
 	return projectionMatrix;
 }

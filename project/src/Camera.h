@@ -9,43 +9,40 @@
 #include "Vector.h"
 #include "Matrix.h"
 
-namespace dae
+struct Camera
 {
-	struct Camera
-	{
-	public:
-		Camera() = default;
-		
-		void Initialize(float aspect, float _fovAngle = 90.f, Vector<3,float> _origin = {0.f,0.f,0.f}, float _nearPlane = 1.0f, float _farPlane = 1000.f);
-		void Update(const Timer* pTimer);
+public:
+	Camera() = default;
 
-		const dae::Matrix<float>& GetViewProjectionMatrix() const;
-		const float* GetViewProjectionMatrixAsFloatArray() const;
-		const dae::Matrix<float>& GetViewMatrix() const;
-		const dae::Matrix<float>& GetProjectionMatrix() const;
-		
-		void CalculateViewMatrix();
+	void Initialize(float aspect, float _fovAngle = 90.f, Vector<3,float> _origin = {0.f,0.f,0.f}, float _nearPlane = 1.0f, float _farPlane = 1000.f);
+	void Update(const Timer* pTimer);
 
-	private:
-		Vector<3,float> origin{};
-		float fovAngle{90.f};
-		float fov{ tanf((fovAngle * Utils::TO_RADIANS) / 2.f) };
+	const Matrix<float>& GetViewProjectionMatrix() const;
+	const float* GetViewProjectionMatrixAsFloatArray() const;
+	const Matrix<float>& GetViewMatrix() const;
+	const Matrix<float>& GetProjectionMatrix() const;
 
-		Vector<3,float> forward{Vector<3,float>::UnitZ};
-		Vector<3,float> up{Vector<3,float>::UnitY};
-		Vector<3,float> right{Vector<3,float>::UnitX};
+	void CalculateViewMatrix();
 
-		float totalPitch{};
-		float totalYaw{};
-		float speed{10};
+private:
+	Vector<3,float> origin{};
+	float fovAngle{90.f};
+	float fov{ tanf((fovAngle * Utils::TO_RADIANS) / 2.f) };
 
-		Matrix<float> invViewMatrix{};
-		Matrix<float> viewMatrix{};
+	Vector<3,float> forward{Vector<3,float>::UnitZ};
+	Vector<3,float> up{Vector<3,float>::UnitY};
+	Vector<3,float> right{Vector<3,float>::UnitX};
 
-		Matrix<float> projectionMatrix{};
-		Matrix<float> projectionViewMatrix{};
-		
-		float nearPlane{};
-		float farPlane{};
-	};
-}
+	float totalPitch{};
+	float totalYaw{};
+	float speed{10};
+
+	Matrix<float> invViewMatrix{};
+	Matrix<float> viewMatrix{};
+
+	Matrix<float> projectionMatrix{};
+	Matrix<float> projectionViewMatrix{};
+
+	float nearPlane{};
+	float farPlane{};
+};

@@ -27,6 +27,8 @@ set(SOURCES
         "src/DiffuseMesh.cpp"
         "src/BaseMeshEffect.cpp"
         "src/AllEffects.h"
+        src/Scene.cpp
+        src/Scene.h
 )
 
 # Create the executable
