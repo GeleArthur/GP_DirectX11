@@ -11,8 +11,7 @@ class Scene {
 public:
     void AddMesh(std::unique_ptr<BaseMeshEffect>&& mesh);
 
-
-    const std::vector<std::unique_ptr<BaseMeshEffect>>& GetAllMeshes() const; // Cloud I return an iterator?
+    const std::vector<std::unique_ptr<BaseMeshEffect>>& GetAllMeshes() const; // could I return an iterator?
     const Camera& GetCamera() const;
     const std::vector<Vector3>& GetLights() const;
 

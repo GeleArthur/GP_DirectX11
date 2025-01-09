@@ -27,12 +27,16 @@ set(SOURCES
         "src/DiffuseMesh.cpp"
         "src/BaseMeshEffect.cpp"
         "src/AllEffects.h"
-        src/Scene.cpp
-        src/Scene.h
+        "src/Scene.cpp"
+        "src/Scene.h"
 )
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build" FORCE)
+endif()
 
 # only needed if header files are not in same directory as source files
 # target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -129,6 +133,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE FX)
 #        COMMAND ${CMAKE_COMMAND} -E copy ${DLL}
 #        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 # endforeach(DLL)
+
+
 
 # Visual Leak Detector
 if (WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)

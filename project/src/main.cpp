@@ -7,7 +7,6 @@
 #undef main
 #include "Renderer.h"
 
-using namespace dae;
 
 void ShutDown(SDL_Window* pWindow)
 {
@@ -90,7 +89,9 @@ int main(int argc, char* args[])
 	delete pRenderer;
 	delete pTimer;
 
-	//d3d11Debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
+	OutputDebugString("REPORT LEAKS\n");
+	d3d11Debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
+	OutputDebugString("DONE LEAKS\n");
 
 	d3d11Debug->Release();
 
