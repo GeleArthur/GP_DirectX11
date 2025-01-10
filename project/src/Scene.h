@@ -9,11 +9,13 @@
 
 class Scene {
 public:
+    void InitScene();
     void AddMesh(std::unique_ptr<BaseMeshEffect>&& mesh);
 
     const std::vector<std::unique_ptr<BaseMeshEffect>>& GetAllMeshes() const; // could I return an iterator?
     const Camera& GetCamera() const;
     const std::vector<Vector3>& GetLights() const;
+    void Update(Timer const & time);
 
 private:
     std::vector<std::unique_ptr<BaseMeshEffect>> m_meshesToRender{};

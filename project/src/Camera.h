@@ -15,7 +15,7 @@ public:
 	Camera() = default;
 
 	void Initialize(float aspect, float _fovAngle = 90.f, Vector<3,float> _origin = {0.f,0.f,0.f}, float _nearPlane = 1.0f, float _farPlane = 1000.f);
-	void Update(const Timer* pTimer);
+	void Update(const Timer& pTimer);
 
 	const Matrix<float>& GetViewProjectionMatrix() const;
 	const float* GetViewProjectionMatrixAsFloatArray() const;

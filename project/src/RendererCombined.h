@@ -18,38 +18,33 @@ enum class TextureSampleMethod
 	anisotropic
 };
 
-class Renderer final
+class RendererCombined final
 {
 public:
-	explicit Renderer(SDL_Window* pWindow);
-	~Renderer();
+	explicit RendererCombined(SDL_Window* pWindow);
+	~RendererCombined();
 
-	Renderer(const Renderer&) = delete;
-	Renderer(Renderer&&) noexcept = delete;
-	Renderer& operator=(const Renderer&) = delete;
-	Renderer& operator=(Renderer&&) noexcept = delete;
+	RendererCombined(const RendererCombined&) = delete;
+	RendererCombined(RendererCombined&&) noexcept = delete;
+	RendererCombined& operator=(const RendererCombined&) = delete;
+	RendererCombined& operator=(RendererCombined&&) noexcept = delete;
 
 	void Update(const Timer* pTimer);
 	void Render() const;
 	void ToggleSampleMode();
-
+	
 private:
 	HRESULT InitializeDirectX();
-
-
+	void InitSoftware();
+	
 	SDL_Window* m_pWindow{};
 
 	int m_Width{};
 	int m_Height{};
-
-	bool m_IsInitialized{ false };
-
+	
 	Camera m_Camera{};
-	Scene m_activeScene{};
-
-	std::vector<Vertex_PosTexture> verties;
-	std::vector<uint32_t> indicies;
-
+	Scene m_ActiveScene{};
+	
 	ID3D11Device* m_pDevice;
 	ID3D11DeviceContext* m_pDeviceContext;
 	IDXGISwapChain* m_pSwapChain;

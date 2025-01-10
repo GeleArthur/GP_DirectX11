@@ -28,9 +28,9 @@ void Camera::CalculateViewMatrix()
 	invViewMatrix = viewMatrix.Inverse();
 }
 
-void Camera::Update(const Timer* pTimer)
+void Camera::Update(const Timer& pTimer)
 {
-	const float deltaTime = pTimer->GetElapsed();
+	const float deltaTime = pTimer.GetElapsed();
 
 	//Keyboard Input
 	const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);

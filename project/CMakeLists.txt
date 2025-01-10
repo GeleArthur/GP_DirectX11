@@ -6,8 +6,8 @@ set(SOURCES
         "src/Matrix.h"
         "src/pch.cpp"
         "src/pch.h"
-        "src/Renderer.h"
-        "src/Renderer.cpp"
+        "src/RendererCombined.cpp"
+        "src/RendererCombined.h"
         "src/Timer.h"
         "src/Timer.cpp"
         "src/Utils.h"
@@ -29,7 +29,7 @@ set(SOURCES
         "src/AllEffects.h"
         "src/Scene.cpp"
         "src/Scene.h"
-)
+ "src/DirectXUtils.h")
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES})

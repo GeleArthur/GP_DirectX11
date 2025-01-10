@@ -6,7 +6,6 @@
 class DiffuseMesh : public BaseMeshEffect
 {
 public:
-
     explicit DiffuseMesh(ID3D11Device* pDevice);
     ~DiffuseMesh() override;
 

@@ -13,3 +13,8 @@ void Scene::AddMesh(std::unique_ptr<BaseMeshEffect>&& mesh) // DOES THIS DO WHAT
 const std::vector<std::unique_ptr<BaseMeshEffect>> & Scene::GetAllMeshes() const { return m_meshesToRender; }
 const Camera& Scene::GetCamera() const { return m_camera;}
 const std::vector<Vector3> & Scene::GetLights() const { return m_directionLights; }
+
+void Scene::Update(Timer const& time)
+{
+    m_camera.Update(time);
+}
