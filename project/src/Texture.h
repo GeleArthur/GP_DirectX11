@@ -6,7 +6,7 @@
 #include "ColorRGB.h"
 #include "Vector.h"
 
-class Texture
+class Texture final
 {
 public:
     Texture(const std::string& fileName, ID3D11Device* pDevice);

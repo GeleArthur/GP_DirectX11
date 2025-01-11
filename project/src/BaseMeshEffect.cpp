@@ -47,7 +47,7 @@ ID3DX11Effect* BaseMeshEffect::LoadEffect(ID3D11Device *pDevice, const std::wstr
         }
         else
         {
-            std::wcout << "Failed to load\n";
+            std::wcout << "Failed to load Effect\n";
         }
     }
 

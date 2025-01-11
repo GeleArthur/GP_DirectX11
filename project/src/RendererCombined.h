@@ -1,6 +1,5 @@
 #pragma once
 #include "Camera.h"
-#include "EffectTexture.h"
 #include "Scene.h"
 
 class BaseMeshEffect;

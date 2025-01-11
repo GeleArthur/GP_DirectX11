@@ -13,9 +13,6 @@ set(SOURCES
         "src/Utils.h"
         "src/Utils.cpp"
         "src/Vector.h"
-        "src/EffectTexture.h"
-        "src/EffectTexture.cpp"
-
 
         "src/Camera.h"
         "src/Camera.cpp"
@@ -47,10 +44,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE d3d11.lib dxgi.lib)
 # Copy resources to output folder
 set(RESOURCES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 file(GLOB_RECURSE RESOURCE_FILES
-        "${RESOURCES_SOURCE_DIR}/*.jpg"
-        "${RESOURCES_SOURCE_DIR}/*.png"
-        "${RESOURCES_SOURCE_DIR}/*.obj"
-        "${RESOURCES_SOURCE_DIR}/*.fx"
+        "${RESOURCES_SOURCE_DIR}/*"
 )
 # set(RESOURCES_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/resources/")
 # file(MAKE_DIRECTORY ${RESOURCES_OUT_DIR})

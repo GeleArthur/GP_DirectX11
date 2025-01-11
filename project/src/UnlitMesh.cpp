@@ -50,7 +50,7 @@ UnlitMesh::UnlitMesh(ID3D11Device* pDevice): m_pDevice(pDevice)
     }
     else
     {
-        static constexpr uint32_t numElements{ 3 };
+        static constexpr uint32_t numElements{ 2 };
         D3D11_INPUT_ELEMENT_DESC vertexDesc[numElements]{};
 
         vertexDesc[0].SemanticName = "POSITION";
@@ -76,14 +76,15 @@ UnlitMesh::UnlitMesh(ID3D11Device* pDevice): m_pDevice(pDevice)
 
 UnlitMesh::~UnlitMesh()
 {
+	delete m_DiffuseTexture;
 }
 
 
 void UnlitMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Camera& camera) // Camera should not be here
 {
-	auto sampler = m_Effect->GetVariableByName("gSampleMode")->AsSampler();
-	if (!sampler->IsValid())
-		return;
+	// auto sampler = m_Effect->GetVariableByName("gSampleMode")->AsSampler();
+	// if (!sampler->IsValid())
+	// 	return;
 	
 	// switch (m_CurrentSampleMode)
 	// {
@@ -113,7 +114,7 @@ void UnlitMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Camera&
 	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pDeviceContext->IASetInputLayout(m_InputLayout.get()); // Source of bad
 	
-	constexpr UINT stride = static_cast<UINT>(sizeof(Vertex_PosTexture));
+	constexpr UINT stride = static_cast<UINT>(sizeof(UnlitData));
 	constexpr UINT offset = 0;
 
 	
@@ -159,29 +160,29 @@ void UnlitMesh::LoadMeshData(std::vector<Vector3>&& position, std::vector<Vector
     vertexBuffer.CPUAccessFlags = 0;
     vertexBuffer.MiscFlags = 0;
 
-    std::vector<UnlitData> layoutData;
-    layoutData.reserve(m_Positions.size());
+    std::vector<UnlitData> vertexData;
+    vertexData.reserve(m_Positions.size());
 
     for (size_t i = 0; i < m_Positions.size(); ++i)
     {
-        layoutData.push_back({.position= m_Positions[i], .uv= m_Uv[i]});
+        vertexData.push_back({.position= m_Positions[i], .uv= m_Uv[i]});
     }
     
     ID3D11Buffer* pVertexBuffer;
 
     D3D11_SUBRESOURCE_DATA initData{};
-    initData.pSysMem = layoutData.data();
+    initData.pSysMem = vertexData.data();
     CallDirectX(m_pDevice->CreateBuffer(&vertexBuffer, &initData, &pVertexBuffer));
 
     m_pVertexBuffer = std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>>(pVertexBuffer, callRelease<ID3D11Buffer>());
 
     D3D11_BUFFER_DESC indexBufferDesc{};
     indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-    indexBufferDesc.ByteWidth = sizeof(uint32_t) * static_cast<uint32_t>(indices.size());
+    indexBufferDesc.ByteWidth = sizeof(uint32_t) * static_cast<uint32_t>(m_Indices.size());
     indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
     indexBufferDesc.CPUAccessFlags = 0;
     indexBufferDesc.MiscFlags = 0;
-    initData.pSysMem = indices.data();
+    initData.pSysMem = m_Indices.data();
     ID3D11Buffer* pIndexBuffer;
     CallDirectX(m_pDevice->CreateBuffer(&indexBufferDesc, &initData, &pIndexBuffer));
     

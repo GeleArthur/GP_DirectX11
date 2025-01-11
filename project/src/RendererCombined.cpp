@@ -2,7 +2,6 @@
 #include "RendererCombined.h"
 
 #include "UnlitMesh.h"
-#include "EffectTexture.h"
 #include "magic_enum.hpp"
 #include "Texture.h"
 #include "Utils.h"
@@ -14,22 +13,11 @@ RendererCombined::RendererCombined(SDL_Window* pWindow) :
 	m_pWindow(pWindow)
 {
 	SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
+	
+	CallDirectX(InitializeDirectX());
+	InitSoftware();
 
-	m_ActiveScene.SetupCamera(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-10.0f});
-
-	const HRESULT result = InitializeDirectX();
-	if (result == S_OK)
-	{
-		std::cout << "DirectX is initialized and ready!\n";
-	}
-	else
-	{
-		std::cout << "DirectX initialization failed!\n";
-	}
-
-	auto coolMesh{std::make_unique<UnlitMesh>(m_pDevice)};
-
-	m_ActiveScene.AddMesh(std::move(coolMesh));
+	LoadScene();
 }
 
 RendererCombined::~RendererCombined()
@@ -163,6 +151,7 @@ void RendererCombined::InitSoftware()
 
 void RendererCombined::LoadScene()
 {
+	m_ActiveScene.SetupCamera(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-10.0f});
 	
 	std::vector<uint32_t> indicies;
 	std::vector<Vertex_PosTexture> verties;
@@ -180,7 +169,7 @@ void RendererCombined::LoadScene()
 	}
 	
 	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
-	mesh->LoadMeshData(std::move(positions), std::move(uv), std::move(indicies), "vehicle_diffuse.png");
+	mesh->LoadMeshData(std::move(positions), std::move(uv), std::move(indicies), "Resources/vehicle_diffuse.png");
 	
 	m_ActiveScene.AddMesh(std::move(mesh));
 }

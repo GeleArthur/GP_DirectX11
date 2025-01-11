@@ -5,6 +5,8 @@
 #include <iostream>
 #include <SDL_image.h>
 
+#include "DirectXUtils.h"
+
 Texture::Texture(const std::string& fileName, ID3D11Device* pDevice)
 {
     m_pSurface = IMG_Load(fileName.c_str());
@@ -35,22 +37,20 @@ Texture::Texture(const std::string& fileName, ID3D11Device* pDevice)
     initData.SysMemPitch = static_cast<UINT>(m_pSurface->pitch);
     initData.SysMemSlicePitch = static_cast<UINT>(m_pSurface->h * m_pSurface->pitch);
     
-    HRESULT result = pDevice->CreateTexture2D(&desc, &initData, &m_pResource);
-    if (FAILED(result))
-        std::cerr << "Can't load texture\n";
+    CallDirectX(pDevice->CreateTexture2D(&desc, &initData, &m_pResource));
 
     D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc{};
     SRVDesc.Format = format;
     SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     SRVDesc.Texture2D.MipLevels = 1;
 
-    result = pDevice->CreateShaderResourceView(m_pResource, &SRVDesc, &m_pSRV);
+    CallDirectX(pDevice->CreateShaderResourceView(m_pResource, &SRVDesc, &m_pSRV));
 }
 
 Texture::~Texture()
 {
-    m_pSRV->Release();
-    m_pResource->Release();
+    if (m_pSRV) m_pSRV->Release();
+    if (m_pResource) m_pResource->Release();
     SDL_FreeSurface(m_pSurface);
 }
 
