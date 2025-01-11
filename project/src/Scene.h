@@ -9,7 +9,7 @@
 
 class Scene {
 public:
-    void InitScene();
+    void SetupCamera(float aspect, float _fovAngle = 90.f, Vector<3,float> _origin = {0.f,0.f,0.f}, float _nearPlane = 1.0f, float _farPlane = 1000.f);
     void AddMesh(std::unique_ptr<BaseMeshEffect>&& mesh);
 
     const std::vector<std::unique_ptr<BaseMeshEffect>>& GetAllMeshes() const; // could I return an iterator?
@@ -22,7 +22,5 @@ private:
     Camera m_camera;
     std::vector<Vector3> m_directionLights{};
 };
-
-
 
 #endif //SCENE_H

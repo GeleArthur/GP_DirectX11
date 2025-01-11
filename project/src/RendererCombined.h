@@ -29,9 +29,11 @@ public:
 	RendererCombined& operator=(const RendererCombined&) = delete;
 	RendererCombined& operator=(RendererCombined&&) noexcept = delete;
 
-	void Update(const Timer* pTimer);
-	void Render() const;
+	void Update(const Timer& pTimer);
+	void RenderDirectX() const;
+	void RenderSoftware() const;
 	void ToggleSampleMode();
+	void LoadScene();
 	
 private:
 	HRESULT InitializeDirectX();
@@ -42,19 +44,23 @@ private:
 	int m_Width{};
 	int m_Height{};
 	
-	Camera m_Camera{};
 	Scene m_ActiveScene{};
 	
-	ID3D11Device* m_pDevice;
-	ID3D11DeviceContext* m_pDeviceContext;
-	IDXGISwapChain* m_pSwapChain;
-	ID3D11Texture2D* m_pDepthStecilBuffer;
-	ID3D11DepthStencilView* m_pDepthStecilView;
-	ID3D11Resource* m_pRenderTargetBuffer;
-	ID3D11RenderTargetView* m_pRenderTargetView;
-
-	std::unique_ptr<EffectTexture> m_CurrentEffect;
-	std::unique_ptr<Texture> m_CurrentTexture;
+	// --------- SOFTWARE ---------
+	
+	SDL_Surface* m_pFrontBuffer{};
+	SDL_Surface* m_pBackBuffer{};
+	uint32_t* m_pBackBufferPixels{};
+	std::vector<float> m_DepthBuffer{};
+	
+	// --------- DirectX ---------
+	ID3D11Device* m_pDevice{};
+	ID3D11DeviceContext* m_pDeviceContext{};
+	IDXGISwapChain* m_pSwapChain{};
+	ID3D11Texture2D* m_pDepthStecilBuffer{};
+	ID3D11DepthStencilView* m_pDepthStecilView{};
+	ID3D11Resource* m_pRenderTargetBuffer{};
+	ID3D11RenderTargetView* m_pRenderTargetView{};
 
 	TextureSampleMethod m_CurrentSampleMode{TextureSampleMethod::anisotropic};
 

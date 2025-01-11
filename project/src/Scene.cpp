@@ -6,6 +6,11 @@
 
 #include "BaseMeshEffect.h"
 
+void Scene::SetupCamera(float aspect, float _fovAngle, Vector<3,float> _origin, float _nearPlane, float _farPlane)
+{
+    m_camera.Initialize(aspect, _fovAngle, _origin, _nearPlane, _farPlane);
+}
+
 void Scene::AddMesh(std::unique_ptr<BaseMeshEffect>&& mesh) // DOES THIS DO WHAT I THINK IT DOES?????
 {
     m_meshesToRender.push_back(std::move(mesh));

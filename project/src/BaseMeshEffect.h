@@ -5,6 +5,8 @@
 #include "Vector.h"
 #include <vector>
 
+struct Camera;
+
 class BaseMeshEffect
 {
 public:
@@ -14,11 +16,10 @@ public:
 	BaseMeshEffect(BaseMeshEffect&& other) = delete;
 	BaseMeshEffect& operator=(BaseMeshEffect& other) = delete;
 	BaseMeshEffect& operator=(BaseMeshEffect&& other) = delete;
+	
+	virtual void RenderDirectX(ID3D11DeviceContext* pDeviceContext, const Camera& camera) = 0;
+	virtual void RenderSoftware() = 0;
 
-	virtual void SetVertexData(const std::vector<Vector3>& positionData) = 0;
-	virtual void SetIndicesData(const std::vector<uint32_t>& positionData) = 0;
-
-	virtual void Render(ID3D11DeviceContext* pDeviceContext) = 0;
 
 	// virtual ID3DX11Effect* GetEffect() const = 0;
 	// virtual void DrawIndexed() const = 0;

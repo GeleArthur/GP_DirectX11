@@ -2,8 +2,17 @@
 #include <fstream>
 #include <vector>
 
+#include "Vector.h"
 
-struct Vertex_PosTexture;
+
+struct Vertex_PosTexture
+{
+	Vector3 position;
+	Vector3 color;
+	Vector2 uv;
+	Vector3 normal;
+	Vector3 tangent;
+};
 
 namespace Utils
 {
@@ -60,6 +69,15 @@ namespace Utils
 		if (v > 1.f) return 1.f;
 		return v;
 	}
-
-
 }
+
+// BHAHAHAHAH TEMPLATES BAHAHHAHAH
+template<typename T>
+class callRelease
+{
+public:
+	void operator()(T* p)
+	{
+		p->Release();
+	}
+};

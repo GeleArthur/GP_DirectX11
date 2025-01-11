@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "RendererCombined.h"
 
-#include "DiffuseMesh.h"
+#include "UnlitMesh.h"
 #include "EffectTexture.h"
 #include "magic_enum.hpp"
 #include "Texture.h"
@@ -15,7 +15,7 @@ RendererCombined::RendererCombined(SDL_Window* pWindow) :
 {
 	SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
 
-	m_Camera.Initialize(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-10.0f});
+	m_ActiveScene.SetupCamera(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-10.0f});
 
 	const HRESULT result = InitializeDirectX();
 	if (result == S_OK)
@@ -27,7 +27,7 @@ RendererCombined::RendererCombined(SDL_Window* pWindow) :
 		std::cout << "DirectX initialization failed!\n";
 	}
 
-	auto coolMesh{std::make_unique<DiffuseMesh>(m_pDevice)};
+	auto coolMesh{std::make_unique<UnlitMesh>(m_pDevice)};
 
 	m_ActiveScene.AddMesh(std::move(coolMesh));
 }
@@ -125,14 +125,7 @@ HRESULT RendererCombined::InitializeDirectX()
 	viewport.MaxDepth = 1.0f;
 	m_pDeviceContext->RSSetViewports(1, &viewport);
 
-	std::vector<uint32_t> indicies;
-	std::vector<Vertex_PosTexture> verties;
-	Utils::ParseOBJ("resources/vehicle.obj", verties, indicies);
-
-
-	m_CurrentEffect = std::make_unique<EffectTexture>(m_pDevice, verties, indicies);
-	m_CurrentTexture = std::make_unique<Texture>("resources/vehicle_diffuse.png" ,m_pDevice);
-
+	
 	D3D11_SAMPLER_DESC config{};
 	config.Filter = D3D11_FILTER_ANISOTROPIC;
 	config.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -157,87 +150,70 @@ HRESULT RendererCombined::InitializeDirectX()
 	config.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	CallDirectX(m_pDevice->CreateSamplerState(&config, &m_pLinearMode));
 
-	DiffuseMesh great(m_pDevice);
-	DiffuseMesh great2(m_pDevice);
-
-
 	return S_OK;
 }
 
 void RendererCombined::InitSoftware()
 {
+	m_pFrontBuffer = SDL_GetWindowSurface(m_pWindow);
+	m_pBackBuffer = SDL_CreateRGBSurface(0, m_Width, m_Height, 32, 0,0, 0,0);
+	m_pBackBufferPixels = static_cast<uint32_t*>(m_pBackBuffer->pixels);
+	m_DepthBuffer.resize(static_cast<size_t>(m_Width) * m_Height);
+}
+
+void RendererCombined::LoadScene()
+{
 	
+	std::vector<uint32_t> indicies;
+	std::vector<Vertex_PosTexture> verties;
+	Utils::ParseOBJ("resources/vehicle.obj", verties, indicies);
+
+	std::vector<Vector3> positions;
+	positions.reserve(verties.size());
+	std::vector<Vector2> uv;
+	uv.reserve(verties.size());
+
+	for (Vertex_PosTexture& vertexData : verties)
+	{
+		positions.push_back(vertexData.position);
+		uv.push_back(vertexData.uv);
+	}
+	
+	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
+	mesh->LoadMeshData(std::move(positions), std::move(uv), std::move(indicies), "vehicle_diffuse.png");
+	
+	m_ActiveScene.AddMesh(std::move(mesh));
 }
 
 
-
-void RendererCombined::Update(const Timer* pTimer)
+void RendererCombined::Update(const Timer& pTimer)
 {
 	m_ActiveScene.Update(pTimer);
 }
 
 
-void RendererCombined::Render() const
+void RendererCombined::RenderDirectX() const
 {
 	constexpr float color[4] = { 0.0f, 0.0f, 0.3f, 1.0f };
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 	m_pDeviceContext->ClearDepthStencilView(m_pDepthStecilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0.0f);
 
-	auto sampler = m_CurrentEffect->GetEffect()->GetVariableByName("gSampleMode")->AsSampler();
-	if (!sampler->IsValid())
-		return;
-
-	switch (m_CurrentSampleMode)
+	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
 	{
-	case TextureSampleMethod::point:
-		sampler->SetSampler(0, m_pPointMode);
-		break;
-	case TextureSampleMethod::linear:
-		sampler->SetSampler(0, m_pLinearMode);
-		break;
-	case TextureSampleMethod::anisotropic:
-		sampler->SetSampler(0, m_pAnisotropicMode);
-		break;
-	}
-
-
-
-	ID3DX11EffectShaderResourceVariable* diffuseMap = m_CurrentEffect->GetEffect()->GetVariableByName("gDiffuseMap")->AsShaderResource();
-	diffuseMap->SetResource(m_CurrentTexture->D3D11GetTexture2D());
-
-
-	ID3DX11EffectMatrixVariable* projectionMatrix = m_CurrentEffect->GetEffect()->GetVariableByName("gWorldViewProj")->AsMatrix();
-	if (!projectionMatrix->IsValid())
-		return;
-
-	projectionMatrix->SetMatrix((m_Camera.GetViewProjectionMatrixAsFloatArray()));
-
-	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_pDeviceContext->IASetInputLayout(m_CurrentEffect->GetInputLayout()); // Source of bad
-
-	constexpr UINT stride = static_cast<UINT>(sizeof(Vertex_PosTexture));
-	constexpr UINT offset = 0;
-
-
-	ID3D11Buffer* vertexBuffer = m_CurrentEffect->GetVertexBuffer();
-	m_pDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer,&stride , &offset);
-
-	ID3D11Buffer* indexBuffer = m_CurrentEffect->GetIndexBuffer();
-	m_pDeviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-	D3DX11_TECHNIQUE_DESC techDesc;
-	m_CurrentEffect->GetTechnique()->GetDesc(&techDesc);
-
-	for (UINT i = 0; i < techDesc.Passes; ++i)
-	{
-		ID3DX11EffectPass* index = m_CurrentEffect->GetTechnique()->GetPassByIndex(i);
-		index->Apply(0, m_pDeviceContext);
-		m_pDeviceContext->DrawIndexed(static_cast<UINT>(indicies.size()), 0, 0);
-		index->Release();
+		mesh->RenderDirectX(m_pDeviceContext, m_ActiveScene.GetCamera());
 	}
 
 	m_pSwapChain->Present(0, 0);
 
+	
+	
+
+
+}
+
+void RendererCombined::RenderSoftware() const
+{
+	
 }
 
 void RendererCombined::ToggleSampleMode()
@@ -258,4 +234,5 @@ void RendererCombined::ToggleSampleMode()
 	std::cout << "Using: " << magic_enum::enum_name(m_CurrentSampleMode) << std::endl;
 
 }
+
 

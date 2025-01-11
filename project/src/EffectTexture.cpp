@@ -74,7 +74,6 @@ EffectTexture::~EffectTexture()
     
     m_pCurrentTechnique->Release();
     m_pCurrentEffect->Release();
-
 }
 
 ID3DX11Effect* EffectTexture::GetEffect() const
