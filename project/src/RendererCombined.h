@@ -1,6 +1,7 @@
 #pragma once
 #include "Camera.h"
 #include "Scene.h"
+#include "SoftwareRendererHelpers.h"
 
 class BaseMeshEffect;
 class Texture;
@@ -46,12 +47,11 @@ private:
 	Scene m_ActiveScene{};
 	
 	// --------- SOFTWARE ---------
-	
+
+	std::unique_ptr<SoftwareRendererHelper> m_SoftwareHelper;
 	SDL_Surface* m_pFrontBuffer{};
 	SDL_Surface* m_pBackBuffer{};
-	uint32_t* m_pBackBufferPixels{};
-	std::vector<float> m_DepthBuffer{};
-	
+
 	// --------- DirectX ---------
 	ID3D11Device* m_pDevice{};
 	ID3D11DeviceContext* m_pDeviceContext{};

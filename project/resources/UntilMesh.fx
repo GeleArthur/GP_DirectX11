@@ -31,6 +31,7 @@ VS_OUTPUT VS(VS_INPUT input)
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
+    //return float4(input.Uv.x, input.Uv.y, 0.0, 1.0);
     float3 rgbColor = gDiffuseMap.Sample(samplePoint, input.Uv);
     return float4(rgbColor, 1.0f);
 };

@@ -145,8 +145,7 @@ void RendererCombined::InitSoftware()
 {
 	m_pFrontBuffer = SDL_GetWindowSurface(m_pWindow);
 	m_pBackBuffer = SDL_CreateRGBSurface(0, m_Width, m_Height, 32, 0,0, 0,0);
-	m_pBackBufferPixels = static_cast<uint32_t*>(m_pBackBuffer->pixels);
-	m_DepthBuffer.resize(static_cast<size_t>(m_Width) * m_Height);
+	m_SoftwareHelper = std::make_unique<SoftwareRendererHelper>(m_Width, m_Height, m_pBackBuffer);
 }
 
 void RendererCombined::LoadScene()
@@ -157,29 +156,24 @@ void RendererCombined::LoadScene()
 	std::vector<Vertex_PosTexture> verties;
 	Utils::ParseOBJ("resources/vehicle.obj", verties, indicies);
 
-	std::vector<Vector3> positions;
-	positions.reserve(verties.size());
-	std::vector<Vector2> uv;
-	uv.reserve(verties.size());
+	std::vector<UnlitData> unlitData;
+	unlitData.reserve(verties.size());
 
-	for (Vertex_PosTexture& vertexData : verties)
+	for (const Vertex_PosTexture& vertexData : verties)
 	{
-		positions.push_back(vertexData.position);
-		uv.push_back(vertexData.uv);
+		unlitData.push_back({.position= vertexData.position, .uv= vertexData.uv});
 	}
 	
 	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
-	mesh->LoadMeshData(std::move(positions), std::move(uv), std::move(indicies), "Resources/vehicle_diffuse.png");
+	mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/vehicle_diffuse.png");
 	
 	m_ActiveScene.AddMesh(std::move(mesh));
 }
-
 
 void RendererCombined::Update(const Timer& pTimer)
 {
 	m_ActiveScene.Update(pTimer);
 }
-
 
 void RendererCombined::RenderDirectX() const
 {
@@ -202,7 +196,19 @@ void RendererCombined::RenderDirectX() const
 
 void RendererCombined::RenderSoftware() const
 {
-	
+	SDL_FillRect(m_pBackBuffer, nullptr, SDL_MapRGB(m_pBackBuffer->format, 100, 100, 100));
+	SDL_LockSurface(m_pBackBuffer);
+
+	m_SoftwareHelper->ClearDepthBuffer();
+
+	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
+	{
+		mesh->RenderSoftware(m_SoftwareHelper.get(), m_ActiveScene.GetCamera());
+	}
+
+	SDL_UnlockSurface(m_pBackBuffer);
+	SDL_BlitSurface(m_pBackBuffer, nullptr, m_pFrontBuffer, nullptr);
+	SDL_UpdateWindowSurface(m_pWindow);
 }
 
 void RendererCombined::ToggleSampleMode()

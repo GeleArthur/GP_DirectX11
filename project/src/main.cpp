@@ -40,6 +40,7 @@ int main(int argc, char* args[])
 	//Initialize "framework"
 	auto pTimer = Timer();
 	const auto pRenderer = new RendererCombined(pWindow);
+	bool RenderSoftWare{};
 
 	//Start loop
 	pTimer.Start();
@@ -61,6 +62,10 @@ int main(int argc, char* args[])
 				{
 					pRenderer->ToggleSampleMode();
 				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
+				{
+					RenderSoftWare  = !RenderSoftWare;
+				}
 				//Test for a key
 				//if (e.key.keysym.scancode == SDL_SCANCODE_X)
 				break;
@@ -72,7 +77,10 @@ int main(int argc, char* args[])
 		pRenderer->Update(pTimer);
 
 		//--------- Render ---------
-		pRenderer->RenderDirectX();
+		if (RenderSoftWare)
+			pRenderer->RenderSoftware();
+		else
+			pRenderer->RenderDirectX();
 
 		//--------- Timer ---------
 		pTimer.Update();

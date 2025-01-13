@@ -131,7 +131,10 @@ struct Matrix
 	{
 		return data[2];
 	}
-	Vector<3,T> GetTranslation() const;
+	Vector<3,T> GetTranslation() const
+	{
+		return Vector3{data[0][3], data[1][3], data[2][3]};
+	}
 
 	static Matrix CreateTranslation(T x, T y, T z)
 	{

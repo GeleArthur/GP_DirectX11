@@ -6,17 +6,14 @@
 #include "RendererCombined.h"
 #include "Texture.h"
 #include "Utils.h"
+#include <execution>
+
+#include "SoftwareRendererHelpers.h"
 
 // Everything in here is using the same layout just the buffers are diffrent
 std::weak_ptr<ID3DX11Effect> UnlitMesh::resourceEffect{};
 std::weak_ptr<ID3DX11EffectTechnique> UnlitMesh::resourceTechnique{};
 std::weak_ptr<ID3D11InputLayout> UnlitMesh::resourceInputLayout{};
-
-struct UnlitData
-{
-	Vector3 position;
-	Vector2 uv;
-};
 
 UnlitMesh::UnlitMesh(ID3D11Device* pDevice): m_pDevice(pDevice)
 {
@@ -137,41 +134,43 @@ void UnlitMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Camera&
 	
 }
 
-void UnlitMesh::RenderSoftware()
+void UnlitMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Camera& camera)
 {
-    
+    VertexStage(m_VertexData, m_VertexDataOut, camera);
+	m_TrianglesOut.clear();
+	softwareRendererHelper->GetTriangles(m_Indices.begin(), m_Indices.end(), m_VertexDataOut.begin(), m_TrianglesOut);
+
+    for (const Triangle<UnlitDataVertexOut>& triangle : m_TrianglesOut)
+    {
+    	softwareRendererHelper->RasterizeTriangle<UnlitDataVertexOut>(triangle, [&](const UnlitDataVertexOut& in)
+	    {
+    		const ColorRGB albedoTexture = m_DiffuseTexture->Sample(in.uv);
+    		return albedoTexture;
+    		
+		    return ColorRGB{in.uv.x, in.uv.y, 0};
+	    });
+    }
 }
 
 
 
-void UnlitMesh::LoadMeshData(std::vector<Vector3>&& position, std::vector<Vector2>&& inputUv, std::vector<uint32_t>&& indices, const std::string& diffuseTextureFilePath)
+void UnlitMesh::LoadMeshData(std::vector<UnlitData>&& vertexData, std::vector<uint32_t>&& indices, const std::string& diffuseTextureFilePath)
 {
-    m_Positions = std::move(position);
-    m_Uv = std::move(inputUv);
+    m_VertexData = std::move(vertexData);
     m_Indices = std::move(indices);
     m_DiffuseTexture = new Texture(diffuseTextureFilePath, m_pDevice); // TODO: MANAGER
-
-    assert(m_Positions.size() == m_Uv.size() && "Position and uv do not have the same size!!! Are they the same mesh?");
-    
+	
     D3D11_BUFFER_DESC vertexBuffer{};
     vertexBuffer.Usage = D3D11_USAGE_IMMUTABLE;
-    vertexBuffer.ByteWidth = sizeof(UnlitData) * static_cast<uint32_t>(m_Positions.size());
+    vertexBuffer.ByteWidth = sizeof(UnlitData) * static_cast<uint32_t>(m_VertexData.size());
     vertexBuffer.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vertexBuffer.CPUAccessFlags = 0;
     vertexBuffer.MiscFlags = 0;
-
-    std::vector<UnlitData> vertexData;
-    vertexData.reserve(m_Positions.size());
-
-    for (size_t i = 0; i < m_Positions.size(); ++i)
-    {
-        vertexData.push_back({.position= m_Positions[i], .uv= m_Uv[i]});
-    }
     
     ID3D11Buffer* pVertexBuffer;
 
     D3D11_SUBRESOURCE_DATA initData{};
-    initData.pSysMem = vertexData.data();
+    initData.pSysMem = m_VertexData.data();
     CallDirectX(m_pDevice->CreateBuffer(&vertexBuffer, &initData, &pVertexBuffer));
 
     m_pVertexBuffer = std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>>(pVertexBuffer, callRelease<ID3D11Buffer>());
@@ -182,6 +181,7 @@ void UnlitMesh::LoadMeshData(std::vector<Vector3>&& position, std::vector<Vector
     indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
     indexBufferDesc.CPUAccessFlags = 0;
     indexBufferDesc.MiscFlags = 0;
+	
     initData.pSysMem = m_Indices.data();
     ID3D11Buffer* pIndexBuffer;
     CallDirectX(m_pDevice->CreateBuffer(&indexBufferDesc, &initData, &pIndexBuffer));
@@ -189,3 +189,28 @@ void UnlitMesh::LoadMeshData(std::vector<Vector3>&& position, std::vector<Vector
     m_pIndexBuffer = std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>>(pIndexBuffer, callRelease<ID3D11Buffer>());
 }
 
+void UnlitMesh::VertexStage(const std::vector<UnlitData>& vertices_in, std::vector<UnlitDataVertexOut>& vertices_out, const Camera& camera) const
+{
+	vertices_out.resize(vertices_in.size());
+	const Matrix<float> worldViewProjectionMatrix = m_WorldMatrix * camera.GetViewProjectionMatrix();
+
+	std::transform(std::execution::par, vertices_in.cbegin(), vertices_in.cend(), vertices_out.begin(),
+	   [&worldViewProjectionMatrix](const UnlitData& v)
+	   {
+		   Vector<4, float> transformedPoint = worldViewProjectionMatrix.TransformPoint(Vector<4, float>{v.position, 1});
+
+		   transformedPoint.x = transformedPoint.x / transformedPoint.w;
+		   transformedPoint.y = transformedPoint.y / transformedPoint.w;
+		   transformedPoint.z = transformedPoint.z / transformedPoint.w;
+           
+		   return UnlitDataVertexOut{
+			   .position = transformedPoint,
+			   .uv = v.uv,
+		   };
+	   });
+}
+
+ColorRGB UnlitMesh::FragmentStage(const UnlitDataVertexOut& vertexIN) const
+{
+	return {};
+}

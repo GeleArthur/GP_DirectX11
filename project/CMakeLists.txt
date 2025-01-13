@@ -13,6 +13,8 @@ set(SOURCES
         "src/Utils.h"
         "src/Utils.cpp"
         "src/Vector.h"
+        "src/SoftwareRendererHelpers.cpp"
+        "src/SoftwareRendererHelpers.h"
 
         "src/Camera.h"
         "src/Camera.cpp"
@@ -26,7 +28,9 @@ set(SOURCES
         "src/AllEffects.h"
         "src/Scene.cpp"
         "src/Scene.h"
- "src/DirectXUtils.h")
+        "src/DirectXUtils.h"
+        
+        )
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES})

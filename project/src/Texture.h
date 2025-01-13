@@ -13,7 +13,7 @@ public:
     ~Texture();
 
     ID3D11ShaderResourceView* D3D11GetTexture2D() const;
-    ColorRGB Sample(const Vector2 *uvCoord, bool normalMap = false) const;
+    ColorRGB Sample(const Vector2 &uvCoord, bool normalMap = true) const;
 
 
 private:
