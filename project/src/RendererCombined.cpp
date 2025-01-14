@@ -150,23 +150,23 @@ void RendererCombined::InitSoftware()
 
 void RendererCombined::LoadScene()
 {
-	m_ActiveScene.SetupCamera(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-10.0f});
-	
+	m_ActiveScene.SetupCamera(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-50.0f});
+	//
 	std::vector<uint32_t> indicies;
 	std::vector<Vertex_PosTexture> verties;
-	Utils::ParseOBJ("resources/vehicle.obj", verties, indicies);
-
+	// Utils::ParseOBJ("resources/vehicle2obj.obj", verties, indicies);
+	//
 	std::vector<UnlitData> unlitData;
-	unlitData.reserve(verties.size());
-
-	for (const Vertex_PosTexture& vertexData : verties)
-	{
-		unlitData.push_back({.position= vertexData.position, .uv= vertexData.uv});
-	}
-	
-	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
-	mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/vehicle_diffuse.png");
-	m_ActiveScene.AddMesh(std::move(mesh));
+	// unlitData.reserve(verties.size());
+	//
+	// for (const Vertex_PosTexture& vertexData : verties)
+	// {
+	// 	unlitData.push_back({.position= vertexData.position, .uv= vertexData.uv});
+	// }
+	//
+	// auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
+	// mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/vehicle_diffuse.png");
+	// m_ActiveScene.AddMesh(std::move(mesh));
 
 
 	// YES
@@ -184,8 +184,8 @@ void RendererCombined::LoadScene()
 		unlitData.push_back({.position= vertexData.position, .uv= vertexData.uv});
 	}
 	
-	mesh = std::make_unique<UnlitMesh>(m_pDevice);
-	mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/uv_grid_2.png");
+	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
+	mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/small.png");
 	m_ActiveScene.AddMesh(std::move(mesh));
 }
 
@@ -196,7 +196,7 @@ void RendererCombined::Update(const Timer& pTimer)
 
 void RendererCombined::RenderDirectX() const
 {
-	constexpr float color[4] = { 0.0f, 0.0f, 0.3f, 1.0f };
+	constexpr float color[4] = { 100.0f/255.f, 100.0f/255.f, 100.0f/255.f, 1.0f };
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 	m_pDeviceContext->ClearDepthStencilView(m_pDepthStecilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0.0f);
 

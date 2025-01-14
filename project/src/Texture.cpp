@@ -65,8 +65,8 @@ ColorRGB Texture::Sample(const Vector2& uvCoord, bool normalMap) const
     Vector2 clamped = { std::clamp(uvCoord.x, 0.0f, 1.0f), std::clamp(uvCoord.y, 0.0f, 1.0f) };
 
     const uint32_t pixel = m_pSurfacePixels[
-        static_cast<int>(clamped.x * static_cast<float>(m_pSurface->w - 1)) +
-        static_cast<int>(clamped.y * static_cast<float>(m_pSurface->h - 1)) * (m_pSurface->w)
+        static_cast<int>(clamped.x * static_cast<float>(m_pSurface->w)) +
+        static_cast<int>(clamped.y * static_cast<float>(m_pSurface->h)) * (m_pSurface->w)
     ];
 
     SDL_GetRGB(pixel, m_pSurface->format, &red, &green, &blue);
