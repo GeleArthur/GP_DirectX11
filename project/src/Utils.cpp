@@ -30,7 +30,7 @@ bool Utils::ParseOBJ(const std::string& filename, std::vector<Vertex_PosTexture>
         for (size_t j = 0; j < shape.mesh.indices.size(); ++j)
         {
             indices.push_back(j);
-            auto index = shape.mesh.indices[j];
+            const auto index = shape.mesh.indices[j];
             
             vertices.push_back({
                 {

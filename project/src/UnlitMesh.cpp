@@ -79,25 +79,6 @@ UnlitMesh::~UnlitMesh()
 
 void UnlitMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Camera& camera) // Camera should not be here
 {
-	// auto sampler = m_Effect->GetVariableByName("gSampleMode")->AsSampler();
-	// if (!sampler->IsValid())
-	// 	return;
-	
-	// switch (m_CurrentSampleMode)
-	// {
-	// case TextureSampleMethod::point:
-	// 	sampler->SetSampler(0, m_pPointMode);
-	// 	break;
-	// case TextureSampleMethod::linear:
-	// 	sampler->SetSampler(0, m_pLinearMode);
-	// 	break;
-	// case TextureSampleMethod::anisotropic:
-	// 	sampler->SetSampler(0, m_pAnisotropicMode);
-	// 	break;
-	// }
-	
-	
-	
 	ID3DX11EffectShaderResourceVariable* diffuseMap = m_Effect->GetVariableByName("gDiffuseMap")->AsShaderResource();
 	diffuseMap->SetResource(m_DiffuseTexture->D3D11GetTexture2D());
 	
@@ -139,17 +120,7 @@ void UnlitMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
     VertexStage(m_VertexData, m_VertexDataOut, camera);
 	m_TrianglesOut.clear();
 	softwareRendererHelper->GetTriangles(m_Indices.begin(), m_Indices.end(), m_VertexDataOut.begin(), m_TrianglesOut);
-
-    for (const Triangle<UnlitDataVertexOut>& triangle : m_TrianglesOut)
-    {
-    	softwareRendererHelper->RasterizeTriangle<UnlitDataVertexOut>(triangle, [&](const UnlitDataVertexOut& in)
-	    {
-    		const ColorRGB albedoTexture = m_DiffuseTexture->Sample(in.uv);
-    		return albedoTexture;
-    		
-		    return ColorRGB{in.uv.x, in.uv.y, 0};
-	    });
-    }
+    softwareRendererHelper->RasterizeTriangle<UnlitDataVertexOut>(m_TrianglesOut, std::bind(&UnlitMesh::FragmentStage, this, std::placeholders::_1));
 }
 
 
@@ -212,5 +183,6 @@ void UnlitMesh::VertexStage(const std::vector<UnlitData>& vertices_in, std::vect
 
 ColorRGB UnlitMesh::FragmentStage(const UnlitDataVertexOut& vertexIN) const
 {
-	return {};
+	const ColorRGB albedoTexture = m_DiffuseTexture->Sample(vertexIN.uv);
+	return albedoTexture;
 }

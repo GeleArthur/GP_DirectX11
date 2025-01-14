@@ -62,7 +62,7 @@ ID3D11ShaderResourceView* Texture::D3D11GetTexture2D() const
 ColorRGB Texture::Sample(const Vector2& uvCoord, bool normalMap) const
 {
     Uint8 red, green, blue;
-    Vector2 clamped = { std::clamp(uvCoord.x, 0.0f, 1.0f), std::clamp(uvCoord.y, 0.0f, 1.0f) };
+    const Vector2 clamped = { std::clamp(uvCoord.x, 0.0f, 1.0f), std::clamp(uvCoord.y, 0.0f, 1.0f) };
 
     const uint32_t pixel = m_pSurfacePixels[
         static_cast<int>(clamped.x * static_cast<float>(m_pSurface->w)) +

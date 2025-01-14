@@ -25,7 +25,6 @@ set(SOURCES
         "src/UnlitMesh.h"
         "src/UnlitMesh.cpp"
         "src/BaseMeshEffect.cpp"
-        "src/AllEffects.h"
         "src/Scene.cpp"
         "src/Scene.h"
         "src/DirectXUtils.h"

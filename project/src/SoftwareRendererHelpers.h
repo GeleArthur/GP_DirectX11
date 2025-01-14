@@ -48,83 +48,87 @@ public:
     }
 
     template <typename VertexType>
-    void RasterizeTriangle(const Triangle<VertexType>& triangle, std::function<ColorRGB(VertexType)> fragmentShader)
+    void RasterizeTriangle(const std::vector<Triangle<VertexType>>& triangles, std::function<ColorRGB(VertexType)> fragmentShader)
     {
-        Vector2 v0 = {
-            (triangle.v0.position.x + 1) / 2.0f * static_cast<float>(m_Width),
-            (1 - triangle.v0.position.y) / 2.0f * static_cast<float>(m_Height)
-        };
-        Vector2 v1 = {
-            (triangle.v1.position.x + 1) / 2.0f * static_cast<float>(m_Width),
-            (1 - triangle.v1.position.y) / 2.0f * static_cast<float>(m_Height)
-        };
-        Vector2 v2 = {
-            (triangle.v2.position.x + 1) / 2.0f * static_cast<float>(m_Width),
-            (1 - triangle.v2.position.y) / 2.0f * static_cast<float>(m_Height)
-        };
-
-        int minX = std::max<int>(0, static_cast<int>(std::min<float>({v0.x, v1.x, v2.x})));
-        int minY = std::max<int>(0, static_cast<int>(std::min<float>({v0.y, v1.y, v2.y})));
-        int maxX = std::min<int>(m_Width, static_cast<int>(std::ceil(std::max<float>({v0.x, v1.x, v2.x}))));
-        int maxY = std::min<int>(m_Height, static_cast<int>(std::ceil(std::max<float>({v0.y, v1.y, v2.y}))));
-
-        for (int px{minX}; px < maxX; ++px)
+        for (const auto& triangle : triangles)
         {
-            for (int py{minY}; py < maxY; ++py)
+            Vector2 v0 = {
+                (triangle.v0.position.x + 1) / 2.0f * static_cast<float>(m_Width),
+                (1 - triangle.v0.position.y) / 2.0f * static_cast<float>(m_Height)
+            };
+            Vector2 v1 = {
+                (triangle.v1.position.x + 1) / 2.0f * static_cast<float>(m_Width),
+                (1 - triangle.v1.position.y) / 2.0f * static_cast<float>(m_Height)
+            };
+            Vector2 v2 = {
+                (triangle.v2.position.x + 1) / 2.0f * static_cast<float>(m_Width),
+                (1 - triangle.v2.position.y) / 2.0f * static_cast<float>(m_Height)
+            };
+
+            const int minX = std::max<int>(0, static_cast<int>(std::min<float>({v0.x, v1.x, v2.x})));
+            const int minY = std::max<int>(0, static_cast<int>(std::min<float>({v0.y, v1.y, v2.y})));
+            const int maxX = std::min<int>(m_Width, static_cast<int>(std::ceil(std::max<float>({v0.x, v1.x, v2.x}))));
+            const int maxY = std::min<int>(m_Height, static_cast<int>(std::ceil(std::max<float>({v0.y, v1.y, v2.y}))));
+
+            for (int px{minX}; px < maxX; ++px)
             {
-                Vector2 pixelLocation = {static_cast<float>(px) + 0.5f, static_cast<float>(py) + 0.5f};
-
-                float distV2 = Vector<2, float>::Cross(v1 - v0, pixelLocation - v0);
-                float distV0 = Vector<2, float>::Cross(v2 - v1, pixelLocation - v1);
-                float distV1 = Vector<2, float>::Cross(v0 - v2, pixelLocation - v2);
-
-                if (distV2 < 0 || distV0 < 0 || distV1 < 0) continue;
-
-                const float area = distV2 + distV0 + distV1;
-                distV0 = (distV0 / area);
-                distV1 = (distV1 / area);
-                distV2 = (distV2 / area);
-
-                const float depth = 1.0f / (1.0f / triangle.v0.position.z * distV0 + 1.0f / triangle.v1.position.z *
-                    distV1 + 1.0f / triangle.v2.position.z * distV2);
-
-                if (depth > 1 || depth < 0)
+                for (int py{minY}; py < maxY; ++py)
                 {
-                    continue;
-                }
+                    Vector2 pixelLocation = {static_cast<float>(px) + 0.5f, static_cast<float>(py) + 0.5f};
 
-                if (m_DepthBuffer[px + (py * m_Width)] >= depth)
-                {
-                    m_DepthBuffer[px + (py * m_Width)] = depth;
+                    float distV2 = Vector<2, float>::Cross(v1 - v0, pixelLocation - v0);
+                    float distV0 = Vector<2, float>::Cross(v2 - v1, pixelLocation - v1);
+                    float distV1 = Vector<2, float>::Cross(v0 - v2, pixelLocation - v2);
 
-#if _DEBUG
-                    if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_T])
+                    if (distV2 < 0 || distV0 < 0 || distV1 < 0) continue;
+
+                    const float area = distV2 + distV0 + distV1;
+                    distV0 = (distV0 / area);
+                    distV1 = (distV1 / area);
+                    distV2 = (distV2 / area);
+
+                    const float depth = 1.0f / (1.0f / triangle.v0.position.z * distV0 + 1.0f / triangle.v1.position.z *
+                        distV1 + 1.0f / triangle.v2.position.z * distV2);
+
+                    if (depth > 1 || depth < 0)
                     {
-                        int mousex;
-                        int mousey;
-                        SDL_GetMouseState(&mousex, &mousey);
-                        if (px == mousex && py == mousey)
-                        {
-                            __debugbreak();
-                        }
+                        continue;
                     }
-#endif
+
+                    if (m_DepthBuffer[px + (py * m_Width)] >= depth)
+                    {
+                        m_DepthBuffer[px + (py * m_Width)] = depth;
+
+    #if _DEBUG
+                        if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_T])
+                        {
+                            int mousex;
+                            int mousey;
+                            SDL_GetMouseState(&mousex, &mousey);
+                            if (px == mousex && py == mousey)
+                            {
+                                __debugbreak();
+                            }
+                        }
+    #endif
 
 
-                    auto vertex0Tuple = triangle.v0.AsTuple();
-                    auto vertex1Tuple = triangle.v1.AsTuple();
-                    auto vertex2Tuple = triangle.v2.AsTuple();
-                    auto correctedVertex = CalulateCorrectedDepthBuffer(vertex0Tuple, vertex1Tuple, vertex2Tuple,
-                                                                        distV0, distV1, distV2,
-                                                                        std::make_index_sequence<std::tuple_size_v<decltype(vertex0Tuple)>>());
-                    
-                    ColorRGB finalColor = fragmentShader(VertexType::FromTuple(correctedVertex));
-                    finalColor.MaxToOne();
+                        auto vertex0Tuple = triangle.v0.AsTuple();
+                        auto vertex1Tuple = triangle.v1.AsTuple();
+                        auto vertex2Tuple = triangle.v2.AsTuple();
+                        auto correctedVertex = CalulateCorrectedDepthBuffer(vertex0Tuple, vertex1Tuple, vertex2Tuple,
+                                                                            distV0, distV1, distV2,
+                                                                            std::make_index_sequence<std::tuple_size_v<decltype(vertex0Tuple)>>());
 
-                    reinterpret_cast<uint32_t*>(m_BackBuffer->pixels)[px + (py * m_Width)] = SDL_MapRGB(m_BackBuffer->format,
-                                                       static_cast<uint8_t>(finalColor.r * 255),
-                                                       static_cast<uint8_t>(finalColor.g * 255),
-                                                       static_cast<uint8_t>(finalColor.b * 255));
+                        
+                        ColorRGB finalColor = fragmentShader(VertexType::FromTuple(correctedVertex));
+                        finalColor.MaxToOne();
+
+                        reinterpret_cast<uint32_t*>(m_BackBuffer->pixels)[px + (py * m_Width)] = SDL_MapRGB(m_BackBuffer->format,
+                                                           static_cast<uint8_t>(finalColor.r * 255),
+                                                           static_cast<uint8_t>(finalColor.g * 255),
+                                                           static_cast<uint8_t>(finalColor.b * 255));
+                    }
                 }
             }
         }
