@@ -34,6 +34,7 @@ public:
 	void RenderSoftware() const;
 	void ToggleSampleMode();
 	void LoadScene();
+	void ToggleSceneBackGround();
 	
 private:
 	HRESULT InitializeDirectX();
@@ -45,6 +46,8 @@ private:
 	int m_Height{};
 	
 	Scene m_ActiveScene{};
+
+	bool m_UseSceneBackgroundColor{false};
 	
 	// --------- SOFTWARE ---------
 

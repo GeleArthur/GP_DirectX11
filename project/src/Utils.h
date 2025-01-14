@@ -4,19 +4,18 @@
 
 #include "Vector.h"
 
-
-struct Vertex_PosTexture
-{
-	Vector3 position;
-	Vector3 color;
-	Vector2 uv;
-	Vector3 normal;
-	Vector3 tangent;
-};
-
 namespace Utils
 {
-	bool ParseOBJ(const std::string& filename, std::vector<Vertex_PosTexture>& vertices, std::vector<uint32_t>& indices, bool flipAxisAndWinding = true);
+	struct ParsedObj
+	{
+		std::vector<Vector3> positions;
+		std::vector<Vector2> uv;
+		std::vector<Vector3> normal;
+		std::vector<Vector3> tangent;
+		std::vector<uint32_t> indices;
+	};
+	
+	ParsedObj ParseOBJ(const std::string& filename, bool flipAxisAndWinding = true);
 
 	/* --- CONSTANTS --- */
 	constexpr auto PI = 3.14159265358979323846f;

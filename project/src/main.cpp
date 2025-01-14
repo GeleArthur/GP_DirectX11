@@ -62,9 +62,13 @@ int main(int argc, char* args[])
 				{
 					pRenderer->ToggleSampleMode();
 				}
-				if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
+				if (e.key.keysym.scancode == SDL_SCANCODE_F1)
 				{
 					renderSoftWare  = !renderSoftWare;
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F10)
+				{
+					pRenderer->ToggleSceneBackGround();
 				}
 				break;
 			default: ;

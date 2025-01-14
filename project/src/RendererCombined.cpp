@@ -151,41 +151,42 @@ void RendererCombined::InitSoftware()
 void RendererCombined::LoadScene()
 {
 	m_ActiveScene.SetupCamera(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-50.0f});
-	//
-	std::vector<uint32_t> indicies;
-	std::vector<Vertex_PosTexture> verties;
-	Utils::ParseOBJ("resources/vehicle2obj.obj", verties, indicies);
-	//
-	std::vector<UnlitData> unlitData;
-	unlitData.reserve(verties.size());
+	m_ActiveScene.SetBackGroundColor({0.1f,0.1f,0.1f});
 	
-	for (const Vertex_PosTexture& vertexData : verties)
+	Utils::ParsedObj vechicle = Utils::ParseOBJ("resources/vehicle2obj.obj", false);
+	
+	std::vector<UnlitData> unlitData;
+	unlitData.reserve(vechicle.indices.size());
+
+	for (int i = 0; i < vechicle.indices.size(); ++i)
 	{
-		unlitData.push_back({.position= vertexData.position, .uv= vertexData.uv});
+		unlitData.emplace_back(vechicle.positions[i], vechicle.uv[i]);
 	}
 	
 	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
-	mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/vehicle_diffuse.png");
+	mesh->LoadMeshData(std::move(unlitData), std::move(vechicle.indices), "Resources/vehicle_diffuse.png");
 	m_ActiveScene.AddMesh(std::move(mesh));
 
-
-	// YES
 	
-	indicies.clear();
-	verties.clear();
-	Utils::ParseOBJ("resources/plane.obj", verties, indicies);
+	auto plane = Utils::ParseOBJ("resources/plane.obj", false);
 
 	unlitData.clear();
-	unlitData.reserve(verties.size());
+	unlitData.reserve(plane.indices.size());
 
-	for (const Vertex_PosTexture& vertexData : verties)
+	for (int i = 0; i < plane.indices.size(); ++i)
 	{
-		unlitData.push_back({.position= vertexData.position, .uv= vertexData.uv});
+		unlitData.emplace_back(plane.positions[i], plane.uv[i]);
 	}
 	
+	
 	mesh = std::make_unique<UnlitMesh>(m_pDevice);
-	mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/small.png");
+	mesh->LoadMeshData(std::move(unlitData), std::move(plane.indices), "Resources/small.png");
 	m_ActiveScene.AddMesh(std::move(mesh));
+}
+
+void RendererCombined::ToggleSceneBackGround()
+{
+	m_UseSceneBackgroundColor = !m_UseSceneBackgroundColor;
 }
 
 void RendererCombined::Update(const Timer& pTimer)
@@ -195,8 +196,24 @@ void RendererCombined::Update(const Timer& pTimer)
 
 void RendererCombined::RenderDirectX() const
 {
-	constexpr float color[4] = { 100.0f/255.f, 100.0f/255.f, 100.0f/255.f, 1.0f };
-	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
+	float backgroundColor[4]{};
+	if (m_UseSceneBackgroundColor)
+	{
+		ColorRGB color = m_ActiveScene.GetBackGroundColor();
+		backgroundColor[0] = color.r;
+		backgroundColor[1] = color.g;
+		backgroundColor[2] = color.b;
+		backgroundColor[3] = 1.0;
+	}
+	else
+	{
+		backgroundColor[0] = 0.39f;
+		backgroundColor[1] = 0.59f;
+		backgroundColor[2] = 0.93f;
+		backgroundColor[3] = 1.0f;
+	}
+	
+	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, backgroundColor);
 	m_pDeviceContext->ClearDepthStencilView(m_pDepthStecilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0.0f);
 
 	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
@@ -210,7 +227,22 @@ void RendererCombined::RenderDirectX() const
 
 void RendererCombined::RenderSoftware() const
 {
-	SDL_FillRect(m_pBackBuffer, nullptr, SDL_MapRGB(m_pBackBuffer->format, 100, 100, 100));
+	uint8_t red, green, blue;
+	if (m_UseSceneBackgroundColor)
+	{
+		auto [r, g, b] = m_ActiveScene.GetBackGroundColor();
+		red = static_cast<uint8_t>(r * 255u);
+		green = static_cast<uint8_t>(g * 255u);
+		blue = static_cast<uint8_t>(b * 255u);
+	}
+	else
+	{
+		red = static_cast<uint8_t>(0.39f * 255u);
+		green = static_cast<uint8_t>(0.39f * 255u);
+		blue = static_cast<uint8_t>(0.39f * 255u);
+	}
+	
+	SDL_FillRect(m_pBackBuffer, nullptr, SDL_MapRGB(m_pBackBuffer->format, red, green, blue));
 	SDL_LockSurface(m_pBackBuffer);
 	
 	m_SoftwareHelper->ClearDepthBuffer();
