@@ -115,8 +115,8 @@ public:
                     // Vector<4, float> position = (triangle.v0.position / triangle.v0.position.w * distV0 + triangle.v1.position / triangle.v1.position.w * distV1 + triangle.v2.position / triangle.v2.position.w * distV2) * depthW;
                     // Vector<2, float> uv = (triangle.v0.uv / triangle.v0.position.w * distV0 + triangle.v1.uv / triangle.v1.position.w * distV1 + triangle.v2.uv / triangle.v2.position.w * distV2) * depthW;
                     VertexType fragment = VertexType{
-                        triangle.v0.position * distV0 + triangle.v1.position * distV1 + triangle.v2.position * distV2 ,
-                        triangle.v0.uv * distV0 + triangle.v1.uv * distV1 + triangle.v2.uv * distV2 ,
+                        ((triangle.v0.position / triangle.v0.position.w) * distV0 + (triangle.v1.position/ triangle.v1.position.w) * distV1 + (triangle.v2.position/triangle.v2.position.w) * distV2) * depthW,
+                        ((triangle.v0.uv / triangle.v0.position.w) * distV0 + (triangle.v1.uv/triangle.v1.position.w) * distV1 + (triangle.v2.uv/triangle.v2.position.w) * distV2)*depthW ,
                     };
                     
                     // auto vertex0Tuple = triangle.v0.AsTuple();

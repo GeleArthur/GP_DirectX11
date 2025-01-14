@@ -15,7 +15,7 @@ Texture2D gDiffuseMap : DiffuseMap;
 
 SamplerState samplePoint
 {
-    Filter = ANISOTROPIC;
+    Filter = MIN_MAG_MIP_POINT;
     AddressU = Wrap;
     AddressV = Wrap;
 };

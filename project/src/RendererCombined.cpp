@@ -166,7 +166,26 @@ void RendererCombined::LoadScene()
 	
 	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
 	mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/vehicle_diffuse.png");
+	m_ActiveScene.AddMesh(std::move(mesh));
+
+
+	// YES
+
 	
+	indicies.clear();
+	verties.clear();
+	Utils::ParseOBJ("resources/plane.obj", verties, indicies);
+
+	unlitData.clear();
+	unlitData.reserve(verties.size());
+
+	for (const Vertex_PosTexture& vertexData : verties)
+	{
+		unlitData.push_back({.position= vertexData.position, .uv= vertexData.uv});
+	}
+	
+	mesh = std::make_unique<UnlitMesh>(m_pDevice);
+	mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/uv_grid_2.png");
 	m_ActiveScene.AddMesh(std::move(mesh));
 }
 

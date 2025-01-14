@@ -29,6 +29,7 @@ set(SOURCES
         "src/Scene.cpp"
         "src/Scene.h"
         "src/DirectXUtils.h"
+        "src/tiny_obj_loader.h"
         
         )
 
