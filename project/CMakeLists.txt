@@ -20,6 +20,8 @@ set(SOURCES
         "src/Camera.cpp"
         "src/Texture.h"
         "src/Texture.cpp"
+        "src/TextureManager.h"
+        "src/TextureManager.cpp"
         "src/magic_enum.hpp"
         "src/BaseMeshEffect.h"
         "src/UnlitMesh.h"

@@ -9,6 +9,7 @@
 #include <execution>
 
 #include "SoftwareRendererHelpers.h"
+#include "TextureManager.h"
 
 // Everything in here is using the same layout just the buffers are diffrent
 std::weak_ptr<ID3DX11Effect> UnlitMesh::resourceEffect{};
@@ -73,7 +74,6 @@ UnlitMesh::UnlitMesh(ID3D11Device* pDevice): m_pDevice(pDevice)
 
 UnlitMesh::~UnlitMesh()
 {
-	delete m_DiffuseTexture;
 }
 
 
@@ -129,7 +129,7 @@ void UnlitMesh::LoadMeshData(std::vector<UnlitData>&& vertexData, std::vector<ui
 {
     m_VertexData = std::move(vertexData);
     m_Indices = std::move(indices);
-    m_DiffuseTexture = new Texture(diffuseTextureFilePath, m_pDevice); // TODO: MANAGER
+    m_DiffuseTexture = TextureManager::GetTexture(diffuseTextureFilePath, m_pDevice); // TODO: MANAGER
 	
     D3D11_BUFFER_DESC vertexBuffer{};
     vertexBuffer.Usage = D3D11_USAGE_IMMUTABLE;

@@ -11,7 +11,7 @@ void Scene::SetupCamera(float aspect, float _fovAngle, Vector3 _origin, float _n
     m_camera.Initialize(aspect, _fovAngle, _origin, _nearPlane, _farPlane);
 }
 
-void Scene::AddMesh(std::unique_ptr<BaseMeshEffect>&& mesh) // DOES THIS DO WHAT I THINK IT DOES?????
+void Scene::AddMesh(std::unique_ptr<BaseMeshEffect>&& mesh) 
 {
     m_meshesToRender.push_back(std::move(mesh));
 }

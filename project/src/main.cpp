@@ -38,9 +38,9 @@ int main(int argc, char* args[])
 		return 1;
 
 	//Initialize "framework"
-	auto pTimer = Timer();
-	const auto pRenderer = new RendererCombined(pWindow);
-	bool RenderSoftWare{};
+	Timer pTimer = Timer();
+	auto pRenderer = std::make_unique<RendererCombined>(pWindow);
+	bool renderSoftWare{};
 
 	//Start loop
 	pTimer.Start();
@@ -64,10 +64,8 @@ int main(int argc, char* args[])
 				}
 				if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
 				{
-					RenderSoftWare  = !RenderSoftWare;
+					renderSoftWare  = !renderSoftWare;
 				}
-				//Test for a key
-				//if (e.key.keysym.scancode == SDL_SCANCODE_X)
 				break;
 			default: ;
 			}
@@ -77,7 +75,7 @@ int main(int argc, char* args[])
 		pRenderer->Update(pTimer);
 
 		//--------- Render ---------
-		if (RenderSoftWare)
+		if (renderSoftWare)
 			pRenderer->RenderSoftware();
 		else
 			pRenderer->RenderDirectX();
@@ -88,17 +86,19 @@ int main(int argc, char* args[])
 		if (printTimer >= 1.f)
 		{
 			printTimer = 0.f;
-			std::cout << "dFPS: " << pTimer.GetdFPS() << std::endl;
+			std::cout << "dFPS: " << pTimer.GetdFPS() << '\n';
 		}
 	}
 	pTimer.Stop();
 
 	//Shutdown "framework"
-	delete pRenderer;
+	pRenderer.reset();
 
+#ifdef _DEBUG
 	OutputDebugString("REPORT LEAKS\n");
 	d3d11Debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
 	OutputDebugString("DONE LEAKS\n");
+#endif
 
 	d3d11Debug->Release();
 

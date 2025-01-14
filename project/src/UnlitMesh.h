@@ -61,7 +61,7 @@ private:
 
     // --- Shared ---
     Matrix<float> m_WorldMatrix{};
-    Texture* m_DiffuseTexture{};
+    std::shared_ptr<Texture> m_DiffuseTexture{};
     
 
     // --- HardWare ---
