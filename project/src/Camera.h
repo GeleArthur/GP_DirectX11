@@ -14,7 +14,7 @@ struct Camera
 public:
 	Camera() = default;
 
-	void Initialize(float aspect, float _fovAngle = 90.f, Vector<3,float> _origin = {0.f,0.f,0.f}, float _nearPlane = 1.0f, float _farPlane = 1000.f);
+	void Initialize(float aspect, float _fovAngle = 90.f, Vector3 _origin = {0.f,0.f,0.f}, float _nearPlane = 1.0f, float _farPlane = 1000.f);
 	void Update(const Timer& pTimer);
 
 	const Matrix<float>& GetViewProjectionMatrix() const;
@@ -25,13 +25,13 @@ public:
 	void CalculateViewMatrix();
 
 private:
-	Vector<3,float> origin{};
+	Vector3 origin{};
 	float fovAngle{90.f};
 	float fov{ tanf((fovAngle * Utils::TO_RADIANS) / 2.f) };
 
-	Vector<3,float> forward{Vector<3,float>::UnitZ};
-	Vector<3,float> up{Vector<3,float>::UnitY};
-	Vector<3,float> right{Vector<3,float>::UnitX};
+	Vector3 forward{Vector3::UnitZ};
+	Vector3 up{Vector3::UnitY};
+	Vector3 right{Vector3::UnitX};
 
 	float totalPitch{};
 	float totalYaw{};

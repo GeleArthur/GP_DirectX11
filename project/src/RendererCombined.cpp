@@ -154,23 +154,22 @@ void RendererCombined::LoadScene()
 	//
 	std::vector<uint32_t> indicies;
 	std::vector<Vertex_PosTexture> verties;
-	// Utils::ParseOBJ("resources/vehicle2obj.obj", verties, indicies);
+	Utils::ParseOBJ("resources/vehicle2obj.obj", verties, indicies);
 	//
 	std::vector<UnlitData> unlitData;
-	// unlitData.reserve(verties.size());
-	//
-	// for (const Vertex_PosTexture& vertexData : verties)
-	// {
-	// 	unlitData.push_back({.position= vertexData.position, .uv= vertexData.uv});
-	// }
-	//
-	// auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
-	// mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/vehicle_diffuse.png");
-	// m_ActiveScene.AddMesh(std::move(mesh));
+	unlitData.reserve(verties.size());
+	
+	for (const Vertex_PosTexture& vertexData : verties)
+	{
+		unlitData.push_back({.position= vertexData.position, .uv= vertexData.uv});
+	}
+	
+	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
+	mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/vehicle_diffuse.png");
+	m_ActiveScene.AddMesh(std::move(mesh));
 
 
 	// YES
-
 	
 	indicies.clear();
 	verties.clear();
@@ -184,7 +183,7 @@ void RendererCombined::LoadScene()
 		unlitData.push_back({.position= vertexData.position, .uv= vertexData.uv});
 	}
 	
-	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
+	mesh = std::make_unique<UnlitMesh>(m_pDevice);
 	mesh->LoadMeshData(std::move(unlitData), std::move(indicies), "Resources/small.png");
 	m_ActiveScene.AddMesh(std::move(mesh));
 }
@@ -207,17 +206,13 @@ void RendererCombined::RenderDirectX() const
 
 	m_pSwapChain->Present(0, 0);
 
-	
-	
-
-
 }
 
 void RendererCombined::RenderSoftware() const
 {
 	SDL_FillRect(m_pBackBuffer, nullptr, SDL_MapRGB(m_pBackBuffer->format, 100, 100, 100));
 	SDL_LockSurface(m_pBackBuffer);
-
+	
 	m_SoftwareHelper->ClearDepthBuffer();
 
 	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())

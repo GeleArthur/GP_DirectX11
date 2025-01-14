@@ -6,7 +6,7 @@
 
 #include "BaseMeshEffect.h"
 
-void Scene::SetupCamera(float aspect, float _fovAngle, Vector<3,float> _origin, float _nearPlane, float _farPlane)
+void Scene::SetupCamera(float aspect, float _fovAngle, Vector3 _origin, float _nearPlane, float _farPlane)
 {
     m_camera.Initialize(aspect, _fovAngle, _origin, _nearPlane, _farPlane);
 }

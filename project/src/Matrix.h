@@ -142,7 +142,7 @@ struct Matrix
 	}
 	static Matrix CreateTranslation(const Vector<3,T>& t)
 	{
-		return { Vector<3,float>::UnitX, Vector<3,float>::UnitY, Vector<3,float>::UnitZ, t };
+		return { Vector3::UnitX, Vector3::UnitY, Vector3::UnitZ, t };
 	}
 	static Matrix CreateRotationX(T pitch)
 	{
@@ -181,7 +181,7 @@ struct Matrix
 	}
 	static Matrix CreateScale(T sx, T sy, T sz)
 	{
-		return { {sx, 0, 0}, {0, sy, 0}, {0, 0, sz}, Vector<3,float>::Zero };
+		return { {sx, 0, 0}, {0, sy, 0}, {0, 0, sz}, Vector3::Zero };
 	}
 	static Matrix CreateScale(const Vector<3,T>& s)
 	{

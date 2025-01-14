@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-void Camera::Initialize(float aspect, float _fovAngle, Vector<3,float> _origin, float _nearPlane, float _farPlane)
+void Camera::Initialize(float aspect, float _fovAngle, Vector3 _origin, float _nearPlane, float _farPlane)
 {
 	fovAngle = _fovAngle;
 	fov = tanf((fovAngle * Utils::TO_RADIANS) / 2.f);
@@ -15,8 +15,8 @@ void Camera::Initialize(float aspect, float _fovAngle, Vector<3,float> _origin, 
 
 void Camera::CalculateViewMatrix()
 {
-	right = Vector<3,float>::Cross(Vector<3,float>::UnitY, forward).Normalized();
-	up = Vector<3,float>::Cross(forward, right).Normalized();
+	right = Vector3::Cross(Vector3::UnitY, forward).Normalized();
+	up = Vector3::Cross(forward, right).Normalized();
 
 	viewMatrix = Matrix<float>{
 			{right.x,   right.y,   right.z,   0},
@@ -39,7 +39,7 @@ void Camera::Update(const Timer& pTimer)
 	int mouseX{}, mouseY{};
 	const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
-	Vector<3,float> input{};
+	Vector3 input{};
 	if(pKeyboardState[SDL_SCANCODE_W])
 	{
 		input.z += speed;
@@ -70,7 +70,7 @@ void Camera::Update(const Timer& pTimer)
 	}
 
 
-	forward = Matrix<float>::CreateRotation(totalPitch, totalYaw, 0).TransformVector(Vector<3,float>::UnitZ);
+	forward = Matrix<float>::CreateRotation(totalPitch, totalYaw, 0).TransformVector(Vector3::UnitZ);
 	forward.Normalize();
 	origin += (forward * input.z + right * input.x) * 5 * deltaTime;
 	

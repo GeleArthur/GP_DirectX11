@@ -197,7 +197,7 @@ void UnlitMesh::VertexStage(const std::vector<UnlitData>& vertices_in, std::vect
 	std::transform(std::execution::par, vertices_in.cbegin(), vertices_in.cend(), vertices_out.begin(),
 	   [&worldViewProjectionMatrix](const UnlitData& v)
 	   {
-		   Vector<4, float> transformedPoint = worldViewProjectionMatrix.TransformPoint(Vector<4, float>{v.position, 1});
+		   Vector4 transformedPoint = worldViewProjectionMatrix.TransformPoint(Vector4{v.position, 1});
 
 		   transformedPoint.x = transformedPoint.x / transformedPoint.w;
 		   transformedPoint.y = transformedPoint.y / transformedPoint.w;
