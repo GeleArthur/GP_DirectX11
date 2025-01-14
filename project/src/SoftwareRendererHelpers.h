@@ -109,57 +109,45 @@ public:
                         }
                     }
 #endif
+
+
+                    auto vertex0Tuple = triangle.v0.AsTuple();
+                    auto vertex1Tuple = triangle.v1.AsTuple();
+                    auto vertex2Tuple = triangle.v2.AsTuple();
+                    auto correctedVertex = CalulateCorrectedDepthBuffer(vertex0Tuple, vertex1Tuple, vertex2Tuple,
+                                                                        distV0, distV1, distV2,
+                                                                        std::make_index_sequence<std::tuple_size_v<decltype(vertex0Tuple)>>());
                     
-                    
-                    float depthW = 1.0f / (1.0f / triangle.v0.position.w * distV0 + 1.0f / triangle.v1.position.w * distV1 + 1.0f / triangle.v2.position.w * distV2);
-                    // Vector4 position = (triangle.v0.position / triangle.v0.position.w * distV0 + triangle.v1.position / triangle.v1.position.w * distV1 + triangle.v2.position / triangle.v2.position.w * distV2) * depthW;
-                    // Vector<2, float> uv = (triangle.v0.uv / triangle.v0.position.w * distV0 + triangle.v1.uv / triangle.v1.position.w * distV1 + triangle.v2.uv / triangle.v2.position.w * distV2) * depthW;
-                    VertexType fragment = VertexType{
-                        ((triangle.v0.position / triangle.v0.position.w) * distV0 + (triangle.v1.position/ triangle.v1.position.w) * distV1 + (triangle.v2.position/triangle.v2.position.w) * distV2) * depthW,
-                        ((triangle.v0.uv / triangle.v0.position.w) * distV0 + (triangle.v1.uv/triangle.v1.position.w) * distV1 + (triangle.v2.uv/triangle.v2.position.w) * distV2)*depthW ,
-                    };
-                    
-                    // auto vertex0Tuple = triangle.v0.AsTuple();
-                    // auto vertex1Tuple = triangle.v1.AsTuple();
-                    // auto vertex2Tuple = triangle.v2.AsTuple();
-                    //
-                    // decltype(vertex0Tuple) result;
-                    //
-                    // [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-                    //     ((std::get<Is>(result) = (std::get<Is>(vertex0Tuple) / std::get<0>(vertex0Tuple).w * distV0  + std::get<Is>(vertex1Tuple) / std::get<0>(vertex0Tuple).w * distV1 + std::get<Is>(vertex2Tuple) / std::get<0>(vertex0Tuple).w * distV2) * depthW ), ...);
-                    // }(std::make_index_sequence<std::tuple_size_v<decltype(result)>>());
-                    //
-                    // VertexType depthCorrectedVertex = VertexType::FromTuple(result);
-                    ColorRGB finalColor = fragmentShader(fragment);
+                    ColorRGB finalColor = fragmentShader(VertexType::FromTuple(correctedVertex));
                     finalColor.MaxToOne();
 
                     reinterpret_cast<uint32_t*>(m_BackBuffer->pixels)[px + (py * m_Width)] = SDL_MapRGB(m_BackBuffer->format,
                                                        static_cast<uint8_t>(finalColor.r * 255),
                                                        static_cast<uint8_t>(finalColor.g * 255),
                                                        static_cast<uint8_t>(finalColor.b * 255));
-
-                    // Vector4 position = (triangle.v0.position / triangle.v0.position.w * distV0 + triangle.v1.position / triangle.v1.position.w * distV1 + triangle.v2.position / triangle.v2.position.w * distV2) * depthW;
-                    // Vector<2, float> uv = (triangle.v0.uv / triangle.v0.position.w * distV0 + triangle.v1.uv / triangle.v1.position.w * distV1 + triangle.v2.uv / triangle.v2.position.w * distV2) * depthW;
-                    // // Vector3 normal = (vertex0.normal / vertex0.position.w * distV0 + vertex1.normal / vertex1.position.w * distV1 + vertex2.normal / vertex2.position.w * distV2) * depthW;
-                    // Vector3 tangent = (vertex0.tangent / vertex0.position.w * distV0 + vertex1.tangent / vertex1.position.w * distV1 + vertex2.tangent / vertex2.position.w * distV2) * depthW;
-                    // Vector3 viewDirection = (vertex0.viewDirection / vertex0.position.w * distV0 + vertex1.viewDirection / vertex1.position.w * distV1 + vertex2.viewDirection / vertex2.position.w * distV2) * depthW;
-                    //
-                    //         ColorRGB finalColor = fragmentShader(VertexType{position, uv});
-                    //         
-                    //         finalColor.MaxToOne();
-                    //
-
-                    
-                    // reinterpret_cast<uint32_t*>(m_BackBuffer->pixels)[px + (py * m_Width)] = SDL_MapRGB(m_BackBuffer->format,
-                    //                                                        static_cast<uint8_t>(depth * 255),
-                    //                                                        static_cast<uint8_t>(depth * 255),
-                    //                                                        static_cast<uint8_t>(depth * 255));
                 }
             }
         }
     }
 
 private:
+
+    template<typename VertexTuple, std::size_t... Index>
+    VertexTuple CalulateCorrectedDepthBuffer(VertexTuple v0, VertexTuple v1, VertexTuple v2, float distV0, float distV1, float distV2,  std::index_sequence<Index...>)
+    {
+        float depthW = 1.0f / (1.0f / std::get<0>(v0).w * distV0 + 1.0f / std::get<0>(v1).w * distV1 + 1.0f / std::get<0>(v2).w * distV2);
+
+        // For each element in the tuple we calulate the corrected depth and barcentic coords
+        VertexTuple out;
+        ((std::get<Index>(out) =
+            (((std::get<Index>(v0) / std::get<0>(v0).w) * distV0 +
+            (std::get<Index>(v1) / std::get<0>(v1).w) * distV1 +
+            (std::get<Index>(v2) / std::get<0>(v2).w) * distV2)) * depthW  ),
+            ...);
+
+        return out;
+    }
+    
     bool CheckInFrustum(auto v)
     {
         if (v.x < -1 || v.x > 1) return true;
