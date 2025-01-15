@@ -8,12 +8,16 @@
 
 void Scene::SetupCamera(float aspect, float _fovAngle, Vector3 _origin, float _nearPlane, float _farPlane)
 {
-    m_camera.Initialize(aspect, _fovAngle, _origin, _nearPlane, _farPlane);
+    m_Camera.Initialize(aspect, _fovAngle, _origin, _nearPlane, _farPlane);
 }
 
 void Scene::AddMesh(std::unique_ptr<BaseMeshEffect>&& mesh) 
 {
-    m_meshesToRender.push_back(std::move(mesh));
+    m_MeshesToRender.push_back(std::move(mesh));
+}
+void Scene::AddLight(const Vector3& direction)
+{
+    m_DirectionLights.push_back(direction);
 }
 
 void Scene::SetBackGroundColor(const ColorRGB& color)
@@ -21,9 +25,9 @@ void Scene::SetBackGroundColor(const ColorRGB& color)
     m_BackGroundColor = color;
 }
 
-const std::vector<std::unique_ptr<BaseMeshEffect>> & Scene::GetAllMeshes() const { return m_meshesToRender; }
-const Camera& Scene::GetCamera() const { return m_camera;}
-const std::vector<Vector3> & Scene::GetLights() const { return m_directionLights; }
+const std::vector<std::unique_ptr<BaseMeshEffect>> & Scene::GetAllMeshes() const { return m_MeshesToRender; }
+const Camera& Scene::GetCamera() const { return m_Camera;}
+const std::vector<Vector3> & Scene::GetLights() const { return m_DirectionLights; }
 
 const ColorRGB& Scene::GetBackGroundColor() const
 {
@@ -32,12 +36,12 @@ const ColorRGB& Scene::GetBackGroundColor() const
 
 void Scene::Update(Timer const& time)
 {
-    m_camera.Update(time);
+    m_Camera.Update(time);
 
     if (m_Rotating)
     {
         m_RotatedAmount += time.GetElapsed();
-        for (auto& mesh : m_meshesToRender)
+        for (auto& mesh : m_MeshesToRender)
         {
             mesh->SetWorldMatrix(Matrix<float>::CreateRotationY(m_RotatedAmount));
         }

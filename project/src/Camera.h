@@ -21,6 +21,7 @@ public:
 	const Matrix<float>& GetViewMatrix() const;
 	const Matrix<float>& GetProjectionMatrix() const;
 	const Vector3& GetForwardVector() const;
+	const Vector3& GetWorldPosition() const;
 
 	void CalculateViewMatrix();
 

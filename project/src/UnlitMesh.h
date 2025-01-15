@@ -45,8 +45,8 @@ public:
     UnlitMesh& operator=(UnlitMesh& other) = delete;
     UnlitMesh& operator=(UnlitMesh&& other) = delete;
 
-    void RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Camera& camera) override;
-    void RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Camera& camera) override;
+    void RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& scene) override;
+    void RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Scene& scene) override;
     void LoadMeshData(std::vector<UnlitData>&& vertexData, std::vector<uint32_t>&& indices, const std::string& diffuseTextureFilePath);
     void SetWorldMatrix(Matrix<float> matrix) override;
 

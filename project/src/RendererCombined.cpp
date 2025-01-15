@@ -6,6 +6,7 @@
 #include "Texture.h"
 #include "Utils.h"
 #include "DirectXUtils.h"
+#include "PhongMesh.h"
 
 extern ID3D11Debug* d3d11Debug;
 
@@ -186,36 +187,36 @@ void RendererCombined::LoadScene()
 	m_ActiveScene.SetupCamera(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-50.0f});
 	m_ActiveScene.SetBackGroundColor({0.1f,0.1f,0.1f});
 	
-	// Utils::ParsedObj vechicle = Utils::ParseOBJ("resources/vehicle2obj.obj", false);
-	//
-	// std::vector<UnlitData> unlitData;
-	// unlitData.reserve(vechicle.indices.size());
-	//
-	// for (int i = 0; i < vechicle.indices.size(); ++i)
-	// {
-	// 	unlitData.emplace_back(vechicle.positions[i], vechicle.uv[i]);
-	// }
-	//
-	// auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
-	// mesh->LoadMeshData(std::move(unlitData), std::move(vechicle.indices), "Resources/vehicle_diffuse.png");
-	// m_ActiveScene.AddMesh(std::move(mesh));
-
+	Utils::ParsedObj vechicle = Utils::ParseOBJ("resources/vehicle2obj.obj", false);
+	
+	std::vector<PhongMeshData> phongData;
+	phongData.reserve(vechicle.indices.size());
+	
+	for (int i = 0; i < vechicle.indices.size(); ++i)
+	{
+		phongData.emplace_back(vechicle.positions[i], vechicle.uv[i], vechicle.normal[i], vechicle.tangent[i]);
+	}
+	
+	auto meshVechicle = std::make_unique<PhongMesh>(m_pDevice);
+	meshVechicle->LoadMeshData(std::move(phongData), std::move(vechicle.indices), "Resources/vehicle_diffuse.png", "Resources/vehicle_normal.png", "Resources/vehicle_gloss.png", "Resources/vehicle_specular.png");
+	m_ActiveScene.AddMesh(std::move(meshVechicle));
 	
 	auto plane = Utils::ParseOBJ("resources/plane.obj", false);
-
 	std::vector<UnlitData> unlitData;
 	unlitData.clear();
 	unlitData.reserve(plane.indices.size());
 
-	for (int i = 0; i < plane.indices.size(); ++i)
+	for (size_t i = 0; i < plane.indices.size(); ++i)
 	{
 		unlitData.emplace_back(plane.positions[i], plane.uv[i]);
 	}
 	
-	
 	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
 	mesh->LoadMeshData(std::move(unlitData), std::move(plane.indices), "Resources/small.png");
 	m_ActiveScene.AddMesh(std::move(mesh));
+
+
+	m_ActiveScene.AddLight({0.577f, -0.577f, 0.577});
 }
 
 void RendererCombined::ToggleSceneBackGround()
@@ -278,7 +279,7 @@ void RendererCombined::RenderDirectX() const
 
 	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
 	{
-		mesh->RenderDirectX(m_pDeviceContext, m_ActiveScene.GetCamera());
+		mesh->RenderDirectX(m_pDeviceContext, m_ActiveScene);
 	}
 
 	m_pSwapChain->Present(0, 0);
@@ -309,7 +310,7 @@ void RendererCombined::RenderSoftware() const
 
 	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
 	{
-		mesh->RenderSoftware(m_SoftwareHelper.get(), m_ActiveScene.GetCamera());
+		mesh->RenderSoftware(m_SoftwareHelper.get(), m_ActiveScene);
 	}
 
 	SDL_UnlockSurface(m_pBackBuffer);

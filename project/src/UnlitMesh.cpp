@@ -72,12 +72,10 @@ UnlitMesh::UnlitMesh(ID3D11Device* pDevice): m_pDevice(pDevice)
     }
 }
 
-UnlitMesh::~UnlitMesh()
-{
-}
+UnlitMesh::~UnlitMesh() = default;
 
 
-void UnlitMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Camera& camera) // Camera should not be here
+void UnlitMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& scene) // Camera should not be here
 {
 	ID3DX11EffectShaderResourceVariable* diffuseMap = m_Effect->GetVariableByName("gDiffuseMap")->AsShaderResource();
 	diffuseMap->SetResource(m_DiffuseTexture->D3D11GetTexture2D());
@@ -86,7 +84,7 @@ void UnlitMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Camera&
 	if (!projectionMatrix->IsValid())
 		return;
 
-	projectionMatrix->SetMatrix((m_WorldMatrix * camera.GetViewProjectionMatrix()).GetFloatArray());
+	projectionMatrix->SetMatrix((m_WorldMatrix * scene.GetCamera().GetViewProjectionMatrix()).GetFloatArray());
 	
 	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pDeviceContext->IASetInputLayout(m_InputLayout.get()); // Source of bad
@@ -115,9 +113,9 @@ void UnlitMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Camera&
 	
 }
 
-void UnlitMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Camera& camera)
+void UnlitMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Scene& scene)
 {
-    VertexStage(m_VertexData, m_VertexDataOut, camera);
+    VertexStage(m_VertexData, m_VertexDataOut, scene.GetCamera());
 	m_TrianglesOut.clear();
 	softwareRendererHelper->GetTriangles(m_Indices.begin(), m_Indices.end(), m_VertexDataOut.begin(), m_TrianglesOut);
     softwareRendererHelper->RasterizeTriangle<UnlitDataVertexOut>(m_TrianglesOut, [&](UnlitDataVertexOut vertexIn)
@@ -127,8 +125,6 @@ void UnlitMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
 		return ColorRGB{Utils::Remap01(softwareRendererHelper->GetLastDepth(), 0.9f, 1.0f)};
     });
 }
-
-
 
 void UnlitMesh::LoadMeshData(std::vector<UnlitData>&& vertexData, std::vector<uint32_t>&& indices, const std::string& diffuseTextureFilePath)
 {

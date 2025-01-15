@@ -110,3 +110,8 @@ const Vector3& Camera::GetForwardVector() const
 {
 	return m_Forward;
 }
+
+const Vector3& Camera::GetWorldPosition() const
+{
+	return m_Origin;
+}

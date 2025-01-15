@@ -1,15 +1,11 @@
 #pragma once
+#define NOMINMAX // I LOVE WINDOWS :D
 #include <d3dx11effect.h>
-#include <SDL_pixels.h>
 #include <string>
-
-#include "Vector.h"
-#include <vector>
-
 #include "Matrix.h"
 
+class Scene;
 class SoftwareRendererHelper;
-struct Camera;
 
 class BaseMeshEffect
 {
@@ -21,8 +17,8 @@ public:
 	BaseMeshEffect& operator=(BaseMeshEffect& other) = delete;
 	BaseMeshEffect& operator=(BaseMeshEffect&& other) = delete;
 	
-	virtual void RenderDirectX(ID3D11DeviceContext* pDeviceContext, const Camera& camera) = 0;
-	virtual void RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Camera& camera) = 0;
+	virtual void RenderDirectX(ID3D11DeviceContext* pDeviceContext, const Scene& camera) = 0;
+	virtual void RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Scene& camera) = 0;
 	virtual void SetWorldMatrix(Matrix<float> matrix) = 0;
 
 

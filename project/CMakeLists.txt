@@ -15,6 +15,8 @@ set(SOURCES
         "src/Vector.h"
         "src/SoftwareRendererHelpers.cpp"
         "src/SoftwareRendererHelpers.h"
+        "src/PhongMesh.h"
+        "src/PhongMesh.cpp"
 
         "src/Camera.h"
         "src/Camera.cpp"

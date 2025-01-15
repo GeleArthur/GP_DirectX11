@@ -55,6 +55,32 @@ Utils::ParsedObj Utils::ParseOBJ(const std::string& filename, bool flipAxisAndWi
                 );
         }
     }
+
+    for (uint32_t i = 0; i < out.indices.size(); i += 3)
+    {
+        uint32_t index0 = out.indices[i];
+        uint32_t index1 = out.indices[static_cast<size_t>(i) + 1];
+        uint32_t index2 = out.indices[static_cast<size_t>(i) + 2];
+
+        const Vector3& p0 = out.positions[index0];
+        const Vector3& p1 = out.positions[index1];
+        const Vector3& p2 = out.positions[index2];
+        const Vector2& uv0 = out.uv[index0];
+        const Vector2& uv1 = out.uv[index1];
+        const Vector2& uv2 = out.uv[index2];
+
+        const Vector3 edge0 = p1 - p0;
+        const Vector3 edge1 = p2 - p0;
+        const Vector2 diffX = Vector2(uv1.x - uv0.x, uv2.x - uv0.x);
+        const Vector2 diffY = Vector2(uv1.y - uv0.y, uv2.y - uv0.y);
+        float r = 1.f / Vector2::Cross(diffX, diffY);
+
+        Vector3 tangent = (edge0 * diffY.y - edge1 * diffY.x) * r;
+        out.tangent.emplace_back(tangent);
+        out.tangent.emplace_back(tangent);
+        out.tangent.emplace_back(tangent);
+    }
+    
     
     return out;
 }
