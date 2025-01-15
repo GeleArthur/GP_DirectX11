@@ -48,15 +48,16 @@ public:
     void RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Camera& camera) override;
     void RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Camera& camera) override;
     void LoadMeshData(std::vector<UnlitData>&& vertexData, std::vector<uint32_t>&& indices, const std::string& diffuseTextureFilePath);
+    void SetWorldMatrix(Matrix<float> matrix) override;
 
 private:
     // -- SoftWare
     std::vector<UnlitData> m_VertexData;
     std::vector<uint32_t> m_Indices;
-
-    void VertexStage(const std::vector<UnlitData>& vertices_in, std::vector<UnlitDataVertexOut>& vertices_out, const Camera& camera) const;
     std::vector<UnlitDataVertexOut> m_VertexDataOut;
     std::vector<Triangle<UnlitDataVertexOut>> m_TrianglesOut;
+
+    void VertexStage(const std::vector<UnlitData>& vertices_in, std::vector<UnlitDataVertexOut>& vertices_out, const Camera& camera) const;
 
     // --- Shared ---
     Matrix<float> m_WorldMatrix{};

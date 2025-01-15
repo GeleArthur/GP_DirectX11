@@ -1,5 +1,6 @@
 #pragma once
 #include "Vector.h"
+#include <cmath>
 
 template<class T>
 struct Matrix
@@ -136,6 +137,12 @@ struct Matrix
 		return Vector3{data[0][3], data[1][3], data[2][3]};
 	}
 
+	const T* GetFloatArray() const
+	{
+		return reinterpret_cast<const float*>(this);
+	}
+
+	
 	static Matrix CreateTranslation(T x, T y, T z)
 	{
 		return CreateTranslation({ x, y, z });
@@ -156,9 +163,9 @@ struct Matrix
 	static Matrix CreateRotationY(T yaw)
 	{
 		return Matrix{
-			{cos(yaw), 0, -sin(yaw), 0},
+			{std::cos(yaw), 0, -std::sin(yaw), 0},
 			{0, 1, 0, 0},
-			{sin(yaw), 0, cos(yaw), 0},
+			{std::sin(yaw), 0, std::cos(yaw), 0},
 			{0, 0, 0, 1}
 		};
 	}
@@ -212,6 +219,8 @@ struct Matrix
 		};
 	}
 
+	
+	
 	Vector<4,T>& operator[](int index)
 	{
 		assert(index <= 3 && index >= 0);

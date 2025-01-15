@@ -33,4 +33,12 @@ const ColorRGB& Scene::GetBackGroundColor() const
 void Scene::Update(Timer const& time)
 {
     m_camera.Update(time);
+
+    static float rotationTime = 0;
+    rotationTime += time.GetElapsed();
+
+    for (auto& mesh : m_meshesToRender)
+    {
+        mesh->SetWorldMatrix(Matrix<float>::CreateRotationY(rotationTime));
+    }
 }

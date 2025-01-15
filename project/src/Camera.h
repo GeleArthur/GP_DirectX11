@@ -18,7 +18,6 @@ public:
 	void Update(const Timer& pTimer);
 
 	const Matrix<float>& GetViewProjectionMatrix() const;
-	const float* GetViewProjectionMatrixAsFloatArray() const;
 	const Matrix<float>& GetViewMatrix() const;
 	const Matrix<float>& GetProjectionMatrix() const;
 	const Vector3& GetForwardVector() const;

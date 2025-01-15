@@ -96,11 +96,6 @@ const Matrix<float>& Camera::GetViewProjectionMatrix() const
 	return m_ProjectionViewMatrix;
 }
 
-const float* Camera::GetViewProjectionMatrixAsFloatArray() const
-{
-	return reinterpret_cast<const float*>(&m_ProjectionViewMatrix);
-}
-
 const Matrix<float>& Camera::GetViewMatrix() const
 {
 	return m_ViewMatrix;

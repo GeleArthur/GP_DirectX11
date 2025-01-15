@@ -6,6 +6,8 @@
 #include "Vector.h"
 #include <vector>
 
+#include "Matrix.h"
+
 class SoftwareRendererHelper;
 struct Camera;
 
@@ -21,6 +23,7 @@ public:
 	
 	virtual void RenderDirectX(ID3D11DeviceContext* pDeviceContext, const Camera& camera) = 0;
 	virtual void RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Camera& camera) = 0;
+	virtual void SetWorldMatrix(Matrix<float> matrix) = 0;
 
 
 	// virtual ID3DX11Effect* GetEffect() const = 0;

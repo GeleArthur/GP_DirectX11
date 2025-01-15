@@ -82,19 +82,17 @@ void UnlitMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Camera&
 	ID3DX11EffectShaderResourceVariable* diffuseMap = m_Effect->GetVariableByName("gDiffuseMap")->AsShaderResource();
 	diffuseMap->SetResource(m_DiffuseTexture->D3D11GetTexture2D());
 	
-	
 	ID3DX11EffectMatrixVariable* projectionMatrix = m_Effect->GetVariableByName("gWorldViewProj")->AsMatrix();
 	if (!projectionMatrix->IsValid())
 		return;
-	
-	projectionMatrix->SetMatrix((camera.GetViewProjectionMatrixAsFloatArray()));
+
+	projectionMatrix->SetMatrix((m_WorldMatrix * camera.GetViewProjectionMatrix()).GetFloatArray());
 	
 	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pDeviceContext->IASetInputLayout(m_InputLayout.get()); // Source of bad
 	
 	constexpr UINT stride = static_cast<UINT>(sizeof(UnlitData));
 	constexpr UINT offset = 0;
-
 	
 	ID3D11Buffer* vertexBuffer = m_pVertexBuffer.get(); // ??????? why
 	pDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride ,&offset);
@@ -104,6 +102,8 @@ void UnlitMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Camera&
 	
 	D3DX11_TECHNIQUE_DESC techDesc;
 	m_Technique->GetDesc(&techDesc);
+
+	
 	
 	for (UINT i = 0; i < techDesc.Passes; ++i)
 	{
@@ -122,8 +122,8 @@ void UnlitMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
 	softwareRendererHelper->GetTriangles(m_Indices.begin(), m_Indices.end(), m_VertexDataOut.begin(), m_TrianglesOut);
     softwareRendererHelper->RasterizeTriangle<UnlitDataVertexOut>(m_TrianglesOut, [&](UnlitDataVertexOut vertexIn)
     {
-    	
     	const ColorRGB albedoTexture = m_DiffuseTexture->Sample(vertexIn.uv);
+    	return albedoTexture;
 		return ColorRGB{Utils::Remap01(softwareRendererHelper->GetLastDepth(), 0.9f, 1.0f)};
     });
 }
@@ -163,6 +163,11 @@ void UnlitMesh::LoadMeshData(std::vector<UnlitData>&& vertexData, std::vector<ui
     CallDirectX(m_pDevice->CreateBuffer(&indexBufferDesc, &initData, &pIndexBuffer));
     
     m_pIndexBuffer = std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>>(pIndexBuffer, callRelease<ID3D11Buffer>());
+}
+
+void UnlitMesh::SetWorldMatrix(const Matrix<float> matrix)
+{
+	m_WorldMatrix = matrix;
 }
 
 void UnlitMesh::VertexStage(const std::vector<UnlitData>& vertices_in, std::vector<UnlitDataVertexOut>& vertices_out, const Camera& camera) const
