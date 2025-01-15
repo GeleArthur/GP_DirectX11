@@ -43,6 +43,7 @@ int main(int argc, char* args[])
 	Timer pTimer = Timer();
 	auto pRenderer = std::make_unique<RendererCombined>(pWindow);
 	bool renderSoftWare{};
+	bool printFps{true};
 
 	//Start loop
 	pTimer.Start();
@@ -81,6 +82,10 @@ int main(int argc, char* args[])
 				{
 					pRenderer->ToggleRotation();
 				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F11)
+				{
+					printFps = !printFps;
+				}
 				break;
 			default: ;
 			}
@@ -101,7 +106,7 @@ int main(int argc, char* args[])
 		if (printTimer >= 1.f)
 		{
 			printTimer = 0.f;
-			std::cout << "dFPS: " << pTimer.GetdFPS() << '\n';
+			if (printFps) std::cout << "dFPS: " << pTimer.GetdFPS() << '\n';
 		}
 	}
 	pTimer.Stop();
