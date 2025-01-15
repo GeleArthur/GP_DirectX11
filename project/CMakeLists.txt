@@ -30,6 +30,7 @@ set(SOURCES
         "src/Scene.cpp"
         "src/Scene.h"
         "src/DirectXUtils.h"
+        "src/CullMode.h"
         "src/tiny_obj_loader.h"
         
         )

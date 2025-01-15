@@ -6,6 +6,10 @@ struct ColorRGB {
     float g{};
     float b{};
 
+    constexpr ColorRGB() = default;
+    constexpr ColorRGB(float r, float g, float b): r(r), g(g), b(b){}
+    constexpr explicit ColorRGB(float blackWhite): r(blackWhite), g(blackWhite), b(blackWhite){}
+
     void MaxToOne();
     static ColorRGB Lerp(const ColorRGB &c1, const ColorRGB &c2, float factor);
 

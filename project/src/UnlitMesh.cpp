@@ -120,7 +120,12 @@ void UnlitMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
     VertexStage(m_VertexData, m_VertexDataOut, camera);
 	m_TrianglesOut.clear();
 	softwareRendererHelper->GetTriangles(m_Indices.begin(), m_Indices.end(), m_VertexDataOut.begin(), m_TrianglesOut);
-    softwareRendererHelper->RasterizeTriangle<UnlitDataVertexOut>(m_TrianglesOut, std::bind(&UnlitMesh::FragmentStage, this, std::placeholders::_1));
+    softwareRendererHelper->RasterizeTriangle<UnlitDataVertexOut>(m_TrianglesOut, [&](UnlitDataVertexOut vertexIn)
+    {
+    	
+    	const ColorRGB albedoTexture = m_DiffuseTexture->Sample(vertexIn.uv);
+		return ColorRGB{Utils::Remap01(softwareRendererHelper->GetLastDepth(), 0.9f, 1.0f)};
+    });
 }
 
 
@@ -180,10 +185,4 @@ void UnlitMesh::VertexStage(const std::vector<UnlitData>& vertices_in, std::vect
                .uv = v.uv,
            };
        });
-}
-
-ColorRGB UnlitMesh::FragmentStage(const UnlitDataVertexOut& vertexIN) const
-{
-	const ColorRGB albedoTexture = m_DiffuseTexture->Sample(vertexIN.uv);
-	return albedoTexture;
 }

@@ -55,7 +55,6 @@ private:
     std::vector<uint32_t> m_Indices;
 
     void VertexStage(const std::vector<UnlitData>& vertices_in, std::vector<UnlitDataVertexOut>& vertices_out, const Camera& camera) const;
-    ColorRGB FragmentStage(const UnlitDataVertexOut& vertexIN) const;
     std::vector<UnlitDataVertexOut> m_VertexDataOut;
     std::vector<Triangle<UnlitDataVertexOut>> m_TrianglesOut;
 

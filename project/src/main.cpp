@@ -48,6 +48,7 @@ int main(int argc, char* args[])
 	pTimer.Start();
 	float printTimer = 0.f;
 	bool isLooping = true;
+	
 	while (isLooping)
 	{
 		//--------- Get input events ---------
@@ -71,6 +72,10 @@ int main(int argc, char* args[])
 				if (e.key.keysym.scancode == SDL_SCANCODE_F10)
 				{
 					pRenderer->ToggleSceneBackGround();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F9)
+				{
+					pRenderer->NextCullMode();
 				}
 				break;
 			default: ;

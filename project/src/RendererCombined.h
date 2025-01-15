@@ -1,7 +1,7 @@
 #pragma once
 #include "Camera.h"
+#include "CullMode.h"
 #include "Scene.h"
-#include "SoftwareRendererHelpers.h"
 
 class BaseMeshEffect;
 class Texture;
@@ -11,7 +11,7 @@ struct Camera;
 struct SDL_Window;
 struct SDL_Surface;
 
-enum class TextureSampleMethod
+enum class TextureSampleMethod : uint8_t
 {
 	point,
 	linear,
@@ -35,10 +35,12 @@ public:
 	void ToggleSampleMode();
 	void LoadScene();
 	void ToggleSceneBackGround();
+	void NextCullMode();
 	
 private:
 	HRESULT InitializeDirectX();
 	void InitSoftware();
+	void SetCullMode() const;
 	
 	SDL_Window* m_pWindow{};
 
@@ -48,6 +50,7 @@ private:
 	Scene m_ActiveScene{};
 
 	bool m_UseSceneBackgroundColor{false};
+	CullMode m_ActiveCullMode{CullMode::back};
 	
 	// --------- SOFTWARE ---------
 
@@ -69,5 +72,8 @@ private:
 	ID3D11SamplerState* m_pLinearMode{};
 	ID3D11SamplerState* m_pPointMode{};
 	ID3D11SamplerState* m_pAnisotropicMode{};
-	ID3D11RasterizerState* m_RasterizerState;
+	
+	ID3D11RasterizerState* m_RasterizerStateCullNone;
+	ID3D11RasterizerState* m_RasterizerStateCullFront;
+	ID3D11RasterizerState* m_RasterizerStateCullBack;
 };

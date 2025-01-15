@@ -231,7 +231,7 @@ struct Matrix
 		{
 			for (int c{ 0 }; c < 4; ++c)
 			{
-				result[r][c] = Vector<4,float>::Dot(data[r], m_transposed[c]);
+				result[r][c] = Vector<4,T>::Dot(data[r], m_transposed[c]);
 			}
 		}
 
@@ -246,7 +246,7 @@ struct Matrix
 		{
 			for (int c{ 0 }; c < 4; ++c)
 			{
-				data[r][c] = Vector<4,float>::Dot(copy[r], m_transposed[c]);
+				data[r][c] = Vector<4,T>::Dot(copy[r], m_transposed[c]);
 			}
 		}
 

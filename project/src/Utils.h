@@ -45,16 +45,9 @@ namespace Utils
 	{
 		return abs(a - b) < epsilon;
 	}
-
-	template<typename  T>
-	int Clamp(const T v, const T min, const T max)
-	{
-		if (v < min) return min;
-		if (v > max) return max;
-		return v;
-	}
+	
 	template<typename T>
-	float Clamp(const T v, const T min, const T max)
+	T Clamp(const T v, const T min, const T max)
 	{
 		if (v < min) return min;
 		if (v > max) return max;
@@ -68,6 +61,13 @@ namespace Utils
 		if (v > 1.f) return 1.f;
 		return v;
 	}
+
+	auto Remap01(auto value, auto start, auto stop)
+	{
+		return (value - start) / (stop - start);
+	}
+
+	
 }
 
 // BHAHAHAHAH TEMPLATES BAHAHHAHAH

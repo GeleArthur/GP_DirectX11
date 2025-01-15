@@ -16,6 +16,7 @@ RendererCombined::RendererCombined(SDL_Window* pWindow) :
 	
 	CallDirectX(InitializeDirectX());
 	InitSoftware();
+	SetCullMode();
 
 	LoadScene();
 }
@@ -118,8 +119,12 @@ HRESULT RendererCombined::InitializeDirectX()
 	rasterizerConfig.CullMode = D3D11_CULL_NONE;
 	rasterizerConfig.FrontCounterClockwise = false;
 	rasterizerConfig.DepthClipEnable = true;
-	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &m_RasterizerState));
-	m_pDeviceContext->RSSetState(m_RasterizerState);
+	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &m_RasterizerStateCullNone));
+	rasterizerConfig.CullMode = D3D11_CULL_FRONT;
+	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &m_RasterizerStateCullFront));
+	rasterizerConfig.CullMode = D3D11_CULL_BACK;
+	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &m_RasterizerStateCullBack));
+
 	
 	D3D11_SAMPLER_DESC config{};
 	config.Filter = D3D11_FILTER_ANISOTROPIC;
@@ -152,7 +157,24 @@ void RendererCombined::InitSoftware()
 {
 	m_pFrontBuffer = SDL_GetWindowSurface(m_pWindow);
 	m_pBackBuffer = SDL_CreateRGBSurface(0, m_Width, m_Height, 32, 0,0, 0,0);
-	m_SoftwareHelper = std::make_unique<SoftwareRendererHelper>(m_Width, m_Height, m_pBackBuffer, m_ActiveScene.GetCamera());
+	m_SoftwareHelper = std::make_unique<SoftwareRendererHelper>(m_Width, m_Height, m_pBackBuffer);
+}
+
+void RendererCombined::SetCullMode() const
+{
+	switch (m_ActiveCullMode)
+	{
+	case CullMode::none:
+		m_pDeviceContext->RSSetState(m_RasterizerStateCullNone);
+		break;
+	case CullMode::front:
+		m_pDeviceContext->RSSetState(m_RasterizerStateCullFront);
+		break;
+	case CullMode::back:
+		m_pDeviceContext->RSSetState(m_RasterizerStateCullBack);
+		break;
+	}
+	m_SoftwareHelper->SetCullMode(m_ActiveCullMode);
 }
 
 void RendererCombined::LoadScene()
@@ -195,6 +217,27 @@ void RendererCombined::LoadScene()
 void RendererCombined::ToggleSceneBackGround()
 {
 	m_UseSceneBackgroundColor = !m_UseSceneBackgroundColor;
+}
+
+void RendererCombined::NextCullMode()
+{
+	switch (m_ActiveCullMode)
+	{
+	case CullMode::none:
+		m_ActiveCullMode = CullMode::front;
+		break;
+	case CullMode::front:
+		m_ActiveCullMode = CullMode::back;
+		break;
+	case CullMode::back:
+		m_ActiveCullMode = CullMode::none;
+		break;
+	}
+	SetCullMode();
+
+	
+	std::cout << "CullMode: " << magic_enum::enum_name(m_ActiveCullMode) << '\n';
+	
 }
 
 void RendererCombined::Update(const Timer& pTimer)

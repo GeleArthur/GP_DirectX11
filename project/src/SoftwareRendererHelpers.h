@@ -1,18 +1,16 @@
 #pragma once
 #include <vector>
 
-#include "Vector.h"
 #include <cmath>
 #include <functional>
-#include <iostream>
 #include <SDL_keyboard.h>
 #include <SDL_mouse.h>
 #include <SDL_pixels.h>
 #include <SDL_surface.h>
+#include "Vector.h"
 
-#include "Camera.h"
 #include "ColorRGB.h"
-
+#include "CullMode.h"
 
 struct Camera;
 
@@ -27,9 +25,11 @@ struct Triangle
 class SoftwareRendererHelper
 {
 public:
-    SoftwareRendererHelper(int width, int height, SDL_Surface* backBuffer, const Camera& camera);
+    SoftwareRendererHelper(int width, int height, SDL_Surface* backBuffer);
 
     void ClearDepthBuffer();
+    float GetLastDepth() const;
+    void SetCullMode(CullMode mode);
 
     template <typename VertexContainer, typename IndicesContainer, typename VertexType>
     void GetTriangles(IndicesContainer begin, const IndicesContainer end, const VertexContainer& vertices, std::vector<Triangle<VertexType>>& triangles)
@@ -40,9 +40,21 @@ public:
             VertexType& v2 = vertices[*(begin + 1)];
             VertexType& v3 = vertices[*(begin + 2)];
 
-            Vector3 normal = Vector3::Cross(Vector3{v2.position - v1.position}, Vector3{v3.position - v1.position});
 
-            if (Vector3::Dot(Vector3{0,0,-1}, normal) > 0 && !FrustumCulling(v1.position, v2.position, v3.position))
+            if (m_CullMode != CullMode::none)
+            {
+                Vector3 normal = Vector3::Cross(Vector3{v2.position - v1.position}, Vector3{v3.position - v1.position});
+                
+                const bool lookAtBack = Vector3::Dot(Vector3{0,0,-1}, normal) > 0;
+                if ((lookAtBack && m_CullMode == CullMode::front) || (!lookAtBack && m_CullMode == CullMode::back))
+                {
+                    begin += 3;
+                    continue;
+                }
+            }
+
+
+            if (!FrustumCulling(v1.position, v2.position, v3.position))
             {
                 triangles.push_back({v1, v2, v3});
             }
@@ -80,9 +92,9 @@ public:
                 {
                     Vector2 pixelLocation = {static_cast<float>(px) + 0.5f, static_cast<float>(py) + 0.5f};
 
-                    float distV2 = Vector<2, float>::Cross(v1 - v0, pixelLocation - v0);
-                    float distV0 = Vector<2, float>::Cross(v2 - v1, pixelLocation - v1);
-                    float distV1 = Vector<2, float>::Cross(v0 - v2, pixelLocation - v2);
+                    float distV2 = Vector2::Cross(v1 - v0, pixelLocation - v0);
+                    float distV0 = Vector2::Cross(v2 - v1, pixelLocation - v1);
+                    float distV1 = Vector2::Cross(v0 - v2, pixelLocation - v2);
 
                     if ( !((distV2 >= 0 && distV0 >= 0 && distV1 >= 0) || (distV2 <= 0 && distV0 <= 0 && distV1 <= 0))) continue;
 
@@ -91,8 +103,7 @@ public:
                     distV1 = (distV1 / area);
                     distV2 = (distV2 / area);
 
-                    const float depth = 1.0f / (1.0f / triangle.v0.position.z * distV0 + 1.0f / triangle.v1.position.z *
-                        distV1 + 1.0f / triangle.v2.position.z * distV2);
+                    const float depth = 1.0f / (1.0f / triangle.v0.position.z * distV0 + 1.0f / triangle.v1.position.z * distV1 + 1.0f / triangle.v2.position.z * distV2);
 
                     if (depth > 1 || depth < 0)
                     {
@@ -102,6 +113,7 @@ public:
                     if (m_DepthBuffer[px + (py * m_Width)] >= depth)
                     {
                         m_DepthBuffer[px + (py * m_Width)] = depth;
+                        m_LastDepth = depth;
 
     #if _DEBUG
                         if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_T])
@@ -174,8 +186,9 @@ private:
 
     int m_Width;
     int m_Height;
+    float m_LastDepth{};
+    CullMode m_CullMode{CullMode::back};
 
     SDL_Surface* m_BackBuffer;
     std::vector<float> m_DepthBuffer{};
-    const Camera& m_Camera;
 };
