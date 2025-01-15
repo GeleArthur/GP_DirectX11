@@ -69,4 +69,5 @@ private:
 	ID3D11SamplerState* m_pLinearMode{};
 	ID3D11SamplerState* m_pPointMode{};
 	ID3D11SamplerState* m_pAnisotropicMode{};
+	ID3D11RasterizerState* m_RasterizerState;
 };

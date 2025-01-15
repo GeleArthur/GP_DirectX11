@@ -113,6 +113,13 @@ HRESULT RendererCombined::InitializeDirectX()
 	viewport.MaxDepth = 1.0f;
 	m_pDeviceContext->RSSetViewports(1, &viewport);
 
+	D3D11_RASTERIZER_DESC rasterizerConfig{};
+	rasterizerConfig.FillMode = D3D11_FILL_SOLID;
+	rasterizerConfig.CullMode = D3D11_CULL_NONE;
+	rasterizerConfig.FrontCounterClockwise = false;
+	rasterizerConfig.DepthClipEnable = true;
+	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &m_RasterizerState));
+	m_pDeviceContext->RSSetState(m_RasterizerState);
 	
 	D3D11_SAMPLER_DESC config{};
 	config.Filter = D3D11_FILTER_ANISOTROPIC;
@@ -145,7 +152,7 @@ void RendererCombined::InitSoftware()
 {
 	m_pFrontBuffer = SDL_GetWindowSurface(m_pWindow);
 	m_pBackBuffer = SDL_CreateRGBSurface(0, m_Width, m_Height, 32, 0,0, 0,0);
-	m_SoftwareHelper = std::make_unique<SoftwareRendererHelper>(m_Width, m_Height, m_pBackBuffer);
+	m_SoftwareHelper = std::make_unique<SoftwareRendererHelper>(m_Width, m_Height, m_pBackBuffer, m_ActiveScene.GetCamera());
 }
 
 void RendererCombined::LoadScene()
@@ -153,23 +160,24 @@ void RendererCombined::LoadScene()
 	m_ActiveScene.SetupCamera(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-50.0f});
 	m_ActiveScene.SetBackGroundColor({0.1f,0.1f,0.1f});
 	
-	Utils::ParsedObj vechicle = Utils::ParseOBJ("resources/vehicle2obj.obj", false);
-	
-	std::vector<UnlitData> unlitData;
-	unlitData.reserve(vechicle.indices.size());
-
-	for (int i = 0; i < vechicle.indices.size(); ++i)
-	{
-		unlitData.emplace_back(vechicle.positions[i], vechicle.uv[i]);
-	}
-	
-	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
-	mesh->LoadMeshData(std::move(unlitData), std::move(vechicle.indices), "Resources/vehicle_diffuse.png");
-	m_ActiveScene.AddMesh(std::move(mesh));
+	// Utils::ParsedObj vechicle = Utils::ParseOBJ("resources/vehicle2obj.obj", false);
+	//
+	// std::vector<UnlitData> unlitData;
+	// unlitData.reserve(vechicle.indices.size());
+	//
+	// for (int i = 0; i < vechicle.indices.size(); ++i)
+	// {
+	// 	unlitData.emplace_back(vechicle.positions[i], vechicle.uv[i]);
+	// }
+	//
+	// auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
+	// mesh->LoadMeshData(std::move(unlitData), std::move(vechicle.indices), "Resources/vehicle_diffuse.png");
+	// m_ActiveScene.AddMesh(std::move(mesh));
 
 	
 	auto plane = Utils::ParseOBJ("resources/plane.obj", false);
 
+	std::vector<UnlitData> unlitData;
 	unlitData.clear();
 	unlitData.reserve(plane.indices.size());
 
@@ -179,7 +187,7 @@ void RendererCombined::LoadScene()
 	}
 	
 	
-	mesh = std::make_unique<UnlitMesh>(m_pDevice);
+	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
 	mesh->LoadMeshData(std::move(unlitData), std::move(plane.indices), "Resources/small.png");
 	m_ActiveScene.AddMesh(std::move(mesh));
 }

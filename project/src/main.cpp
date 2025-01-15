@@ -37,6 +37,8 @@ int main(int argc, char* args[])
 	if (!pWindow)
 		return 1;
 
+	// SDL_SetRelativeMouseMode(SDL_TRUE);
+
 	//Initialize "framework"
 	Timer pTimer = Timer();
 	auto pRenderer = std::make_unique<RendererCombined>(pWindow);

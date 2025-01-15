@@ -1,31 +1,31 @@
 #include "Camera.h"
 
-void Camera::Initialize(float aspect, float _fovAngle, Vector3 _origin, float _nearPlane, float _farPlane)
+void Camera::Initialize(float aspect, float fovAngle, Vector3 origin, float nearPlane, float farPlane)
 {
-	fovAngle = _fovAngle;
-	fov = tanf((fovAngle * Utils::TO_RADIANS) / 2.f);
-	nearPlane = _nearPlane;
-	farPlane = _farPlane;
-	origin = _origin;
+	m_FovAngle = fovAngle;
+	m_Fov = tanf((m_FovAngle * Utils::TO_RADIANS) / 2.f);
+	m_NearPlane = nearPlane;
+	m_FarPlane = farPlane;
+	m_Origin = origin;
 
 
-	projectionMatrix = Matrix<float>::CreatePerspectiveFovLH(fov, aspect, nearPlane, farPlane);
+	m_ProjectionMatrix = Matrix<float>::CreatePerspectiveFovLH(m_Fov, aspect, m_NearPlane, m_FarPlane);
 	
 }
 
 void Camera::CalculateViewMatrix()
 {
-	right = Vector3::Cross(Vector3::UnitY, forward).Normalized();
-	up = Vector3::Cross(forward, right).Normalized();
+	m_Right = Vector3::Cross(Vector3::UnitY, m_Forward).Normalized();
+	m_Up = Vector3::Cross(m_Forward, m_Right).Normalized();
 
-	viewMatrix = Matrix<float>{
-			{right.x,   right.y,   right.z,   0},
-			{up.x,	    up.y,      up.z,      0},
-			{forward.x, forward.y, forward.z, 0},
-			{origin.x,  origin.y,   origin.z, 1}
+	m_ViewMatrix = Matrix<float>{
+			{m_Right.x,   m_Right.y,   m_Right.z,   0},
+			{m_Up.x,	    m_Up.y,      m_Up.z,      0},
+			{m_Forward.x, m_Forward.y, m_Forward.z, 0},
+			{m_Origin.x,  m_Origin.y,   m_Origin.z, 1}
 	};
 
-	invViewMatrix = viewMatrix.Inverse();
+	m_InvViewMatrix = m_ViewMatrix.Inverse();
 }
 
 void Camera::Update(const Timer& pTimer)
@@ -42,59 +42,76 @@ void Camera::Update(const Timer& pTimer)
 	Vector3 input{};
 	if(pKeyboardState[SDL_SCANCODE_W])
 	{
-		input.z += speed;
+		input.z += m_Speed * deltaTime;
 	}
 	if(pKeyboardState[SDL_SCANCODE_S])
 	{
-		input.z -= speed;
+		input.z -= m_Speed * deltaTime;
 	}
 	if(pKeyboardState[SDL_SCANCODE_A])
 	{
-		input.x -= speed;
+		input.x -= m_Speed * deltaTime;
 	}
 	if(pKeyboardState[SDL_SCANCODE_D])
 	{
-		input.x += speed;
+		input.x += m_Speed * deltaTime;
 	}
 
-	if(mouseState == SDL_BUTTON_RMASK)
+	if (mouseState == (SDL_BUTTON_RMASK | SDL_BUTTON_LMASK))
 	{
-		totalPitch += -static_cast<float>(mouseY) * 0.01f;
-		totalYaw += static_cast<float>(mouseX) * 0.01f;
+		input.y += -static_cast<float>(mouseY) * 0.3f;
+		input.x += static_cast<float>(mouseX) * 0.3f;
+	}
+	else if(mouseState == SDL_BUTTON_RMASK)
+	{
+		m_TotalPitch += -static_cast<float>(mouseY) * 0.01f;
+		m_TotalYaw += static_cast<float>(mouseX) * 0.01f;
 	}
 	else if(mouseState == SDL_BUTTON_LMASK)
 	{
 		input.z += -static_cast<float>(mouseY) * 0.3f;
-
-		totalYaw += static_cast<float>(mouseX) * 0.01f;
+		m_TotalYaw += static_cast<float>(mouseX) * 0.01f;
 	}
+	
+	
+	m_Forward = Matrix<float>::CreateRotation(m_TotalPitch, m_TotalYaw, 0).TransformVector(Vector3::UnitZ);
+	m_Forward.Normalize();
+	Vector3 movement = (m_Forward * input.z + m_Right * input.x + m_Up * input.y);
 
-
-	forward = Matrix<float>::CreateRotation(totalPitch, totalYaw, 0).TransformVector(Vector3::UnitZ);
-	forward.Normalize();
-	origin += (forward * input.z + right * input.x) * 5 * deltaTime;
+	if (pKeyboardState[SDL_SCANCODE_LSHIFT])
+	{
+		movement *= m_ShiftSpeedMultiply;
+	}
+	
+	m_Origin += movement;
+	
 	
 	CalculateViewMatrix();
 
-	projectionViewMatrix = invViewMatrix * projectionMatrix;
+	m_ProjectionViewMatrix = m_InvViewMatrix * m_ProjectionMatrix;
 }
 
 const Matrix<float>& Camera::GetViewProjectionMatrix() const
 {
-	return projectionViewMatrix;
+	return m_ProjectionViewMatrix;
 }
 
 const float* Camera::GetViewProjectionMatrixAsFloatArray() const
 {
-	return reinterpret_cast<const float*>(&projectionViewMatrix);
+	return reinterpret_cast<const float*>(&m_ProjectionViewMatrix);
 }
 
 const Matrix<float>& Camera::GetViewMatrix() const
 {
-	return viewMatrix;
+	return m_ViewMatrix;
 }
 
 const Matrix<float>& Camera::GetProjectionMatrix() const
 {
-	return projectionMatrix;
+	return m_ProjectionMatrix;
+}
+
+const Vector3& Camera::GetForwardVector() const
+{
+	return m_Forward;
 }

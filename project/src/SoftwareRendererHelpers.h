@@ -10,8 +10,11 @@
 #include <SDL_pixels.h>
 #include <SDL_surface.h>
 
+#include "Camera.h"
 #include "ColorRGB.h"
 
+
+struct Camera;
 
 template <typename VertexType>
 struct Triangle
@@ -24,13 +27,12 @@ struct Triangle
 class SoftwareRendererHelper
 {
 public:
-    SoftwareRendererHelper(int width, int height, SDL_Surface* backBuffer);
+    SoftwareRendererHelper(int width, int height, SDL_Surface* backBuffer, const Camera& camera);
 
     void ClearDepthBuffer();
 
     template <typename VertexContainer, typename IndicesContainer, typename VertexType>
-    void GetTriangles(IndicesContainer begin, const IndicesContainer end, const VertexContainer& vertices,
-                      std::vector<Triangle<VertexType>>& triangles)
+    void GetTriangles(IndicesContainer begin, const IndicesContainer end, const VertexContainer& vertices, std::vector<Triangle<VertexType>>& triangles)
     {
         while (begin != end)
         {
@@ -38,7 +40,9 @@ public:
             VertexType& v2 = vertices[*(begin + 1)];
             VertexType& v3 = vertices[*(begin + 2)];
 
-            if (!FrustumCulling(v1.position, v2.position, v3.position))
+            Vector3 normal = Vector3::Cross(Vector3{v2.position - v1.position}, Vector3{v3.position - v1.position});
+
+            if (Vector3::Dot(Vector3{0,0,-1}, normal) > 0 && !FrustumCulling(v1.position, v2.position, v3.position))
             {
                 triangles.push_back({v1, v2, v3});
             }
@@ -80,7 +84,7 @@ public:
                     float distV0 = Vector<2, float>::Cross(v2 - v1, pixelLocation - v1);
                     float distV1 = Vector<2, float>::Cross(v0 - v2, pixelLocation - v2);
 
-                    if (distV2 < 0 || distV0 < 0 || distV1 < 0) continue;
+                    if ( !((distV2 >= 0 && distV0 >= 0 && distV1 >= 0) || (distV2 <= 0 && distV0 <= 0 && distV1 <= 0))) continue;
 
                     const float area = distV2 + distV0 + distV1;
                     distV0 = (distV0 / area);
@@ -173,4 +177,5 @@ private:
 
     SDL_Surface* m_BackBuffer;
     std::vector<float> m_DepthBuffer{};
+    const Camera& m_Camera;
 };

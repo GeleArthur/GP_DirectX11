@@ -2,12 +2,15 @@
 
 #include <SDL_surface.h>
 
+#include "Camera.h"
 
-SoftwareRendererHelper::SoftwareRendererHelper(const int width, const int height, SDL_Surface* backBuffer):
+
+SoftwareRendererHelper::SoftwareRendererHelper(const int width, const int height, SDL_Surface* backBuffer, const Camera& camera):
     m_Width(width),
     m_Height(height),
+    m_BackBuffer(backBuffer),
     m_DepthBuffer(static_cast<size_t>(width * height)),
-    m_BackBuffer(backBuffer)
+    m_Camera(camera)
 {
 }
 

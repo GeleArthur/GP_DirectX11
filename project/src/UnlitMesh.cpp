@@ -166,19 +166,20 @@ void UnlitMesh::VertexStage(const std::vector<UnlitData>& vertices_in, std::vect
 	const Matrix<float> worldViewProjectionMatrix = m_WorldMatrix * camera.GetViewProjectionMatrix();
 
 	std::transform(std::execution::par, vertices_in.cbegin(), vertices_in.cend(), vertices_out.begin(),
-	   [&worldViewProjectionMatrix](const UnlitData& v)
-	   {
-		   Vector4 transformedPoint = worldViewProjectionMatrix.TransformPoint(Vector4{v.position, 1});
+       [&worldViewProjectionMatrix](const UnlitData& v)
+       {
+           Vector4 transformedPoint = worldViewProjectionMatrix.TransformPoint(Vector4{v.position, 1});
 
-		   transformedPoint.x = transformedPoint.x / transformedPoint.w;
-		   transformedPoint.y = transformedPoint.y / transformedPoint.w;
-		   transformedPoint.z = transformedPoint.z / transformedPoint.w;
-           
-		   return UnlitDataVertexOut{
-			   .position = transformedPoint,
-			   .uv = v.uv,
-		   };
-	   });
+           // TODO: Move this after the frustum culling
+           transformedPoint.x = transformedPoint.x / transformedPoint.w;
+           transformedPoint.y = transformedPoint.y / transformedPoint.w;
+           transformedPoint.z = transformedPoint.z / transformedPoint.w;
+
+           return UnlitDataVertexOut{
+               .position = transformedPoint,
+               .uv = v.uv,
+           };
+       });
 }
 
 ColorRGB UnlitMesh::FragmentStage(const UnlitDataVertexOut& vertexIN) const
