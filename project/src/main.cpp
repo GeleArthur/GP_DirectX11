@@ -61,13 +61,13 @@ int main(int argc, char* args[])
 				isLooping = false;
 				break;
 			case SDL_KEYUP:
-				if (e.key.keysym.scancode == SDL_SCANCODE_F2)
+				if (e.key.keysym.scancode == SDL_SCANCODE_F4)
 				{
 					pRenderer->ToggleSampleMode();
 				}
 				if (e.key.keysym.scancode == SDL_SCANCODE_F1)
 				{
-					renderSoftWare  = !renderSoftWare;
+					renderSoftWare = !renderSoftWare;
 				}
 				if (e.key.keysym.scancode == SDL_SCANCODE_F10)
 				{
@@ -76,6 +76,10 @@ int main(int argc, char* args[])
 				if (e.key.keysym.scancode == SDL_SCANCODE_F9)
 				{
 					pRenderer->NextCullMode();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F2)
+				{
+					pRenderer->ToggleRotation();
 				}
 				break;
 			default: ;

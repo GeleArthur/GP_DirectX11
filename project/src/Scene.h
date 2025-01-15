@@ -19,15 +19,15 @@ public:
     const std::vector<Vector3>& GetLights() const;
     const ColorRGB& GetBackGroundColor() const;
     void Update(Timer const & time);
-    
+    void ToggleRotation();
 
 private:
     std::vector<std::unique_ptr<BaseMeshEffect>> m_meshesToRender{};
     Camera m_camera;
     std::vector<Vector3> m_directionLights{};
     ColorRGB m_BackGroundColor{};
-
-    
+    bool m_Rotating{false};
+    float m_RotatedAmount{};
 };
 
 #endif //SCENE_H

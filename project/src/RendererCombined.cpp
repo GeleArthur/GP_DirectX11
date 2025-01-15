@@ -31,6 +31,10 @@ RendererCombined::~RendererCombined()
 	m_pRenderTargetView->Release();
 	m_pRenderTargetBuffer->Release();
 	m_pSwapChain->Release();
+
+	m_RasterizerStateCullBack->Release();
+	m_RasterizerStateCullFront->Release();
+	m_RasterizerStateCullNone->Release();
 	
 	if (m_pDeviceContext)
 	{
@@ -238,6 +242,11 @@ void RendererCombined::NextCullMode()
 	
 	std::cout << "CullMode: " << magic_enum::enum_name(m_ActiveCullMode) << '\n';
 	
+}
+
+void RendererCombined::ToggleRotation()
+{
+	m_ActiveScene.ToggleRotation();
 }
 
 void RendererCombined::Update(const Timer& pTimer)

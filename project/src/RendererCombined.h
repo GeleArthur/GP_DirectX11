@@ -36,6 +36,7 @@ public:
 	void LoadScene();
 	void ToggleSceneBackGround();
 	void NextCullMode();
+	void ToggleRotation();
 	
 private:
 	HRESULT InitializeDirectX();
