@@ -121,7 +121,7 @@ public:
                             int mousex;
                             int mousey;
                             SDL_GetMouseState(&mousex, &mousey);
-                            if (px == mousex && py == mousey)
+                            if (px == 972 && py == 609)
                             {
                                 __debugbreak();
                             }

@@ -64,10 +64,10 @@ private:
     std::vector<uint32_t> m_Indices;
     std::vector<PhongMeshDataVertexOut> m_VertexDataOut;
     std::vector<Triangle<PhongMeshDataVertexOut>> m_TrianglesOut;
-    bool m_UseNormalMaps{true};
+    bool m_UseNormalMaps{false};
     float m_DiffuseReflectance{7.0f};
     float m_Shininess{25.0f};
-    ShadingMode m_ShadingMode{ShadingMode::combined};
+    ShadingMode m_ShadingMode{ShadingMode::observed_area};
 
     void VertexStage(const std::vector<PhongMeshData>& vertices_in, std::vector<PhongMeshDataVertexOut>& vertices_out, const Camera& camera) const;
 

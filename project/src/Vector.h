@@ -278,24 +278,25 @@ struct Vector<4, T>
 
 	Vector() = default;
 	Vector(const T& tx, const T& ty, const T& tz, const T& tw) : x{tx}, y{ty}, z{tz}, w{tw} {}
-	explicit  Vector(const Vector<3,T>& v, const T& _w) : x{v.x}, y{v.y}, z{v.z}, w{_w} {}
+	explicit Vector(const Vector<3,T>& v, const T& _w) : x{v.x}, y{v.y}, z{v.z}, w{_w} {}
+	const T* GetFloatArray() const
+	{
+		return reinterpret_cast<const float*>(this);
+	}
 
 	T Magnitude() const
 	{
 		return sqrtf(x * x + y * y + z * z + w * w);
 	}
-
 	T SqrMagnitude() const
 	{
 		return x * x + y * y + z * z + w * w;
 	}
-
 	Vector<2,T> Normalized() const
 	{
 		T magnitude = Magnitude();
 		return {x / magnitude, y / magnitude, z / magnitude, w / magnitude};
 	}
-
 	static T Dot(const Vector& v1, const Vector& v2)
 	{
 		return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w;
@@ -339,7 +340,6 @@ struct Vector<4, T>
 		if (index == 2)return z;
 		return w;
 	}
-
 	T operator[](int index) const
 	{
 		assert(index <= 3 && index >= 0);

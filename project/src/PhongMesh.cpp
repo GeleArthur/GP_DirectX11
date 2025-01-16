@@ -92,10 +92,14 @@ void PhongMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& 
 	ID3DX11EffectMatrixVariable* projectionMatrix = m_Effect->GetVariableByName("gWorldViewProj")->AsMatrix();
 	CallDirectX(projectionMatrix->SetMatrix((m_WorldMatrix * scene.GetCamera().GetViewProjectionMatrix()).GetFloatArray()));
 
+	ID3DX11EffectMatrixVariable* worldMatrix = m_Effect->GetVariableByName("gWorldMatrix")->AsMatrix();
+	CallDirectX(worldMatrix->SetMatrix((m_WorldMatrix).GetFloatArray()));
+
 	ID3DX11EffectVectorVariable* worldPostion = m_Effect->GetVariableByName("gWorldPosition")->AsVector();
+	CallDirectX(worldPostion->SetFloatVector(Vector4{scene.GetCamera().GetWorldPosition(), 0.0f}.GetFloatArray()));
 	
-	Vector4 convertedWorld = Vector4{scene.GetCamera().GetWorldPosition(), 0.0f};
-	CallDirectX(worldPostion->SetFloatVector(reinterpret_cast<float*>(&convertedWorld)));
+	ID3DX11EffectVectorVariable* lightDirection = m_Effect->GetVariableByName("gLightDirection")->AsVector();
+	CallDirectX(lightDirection->SetFloatVector(Vector4{scene.GetLights()[0], 0.0f}.GetFloatArray()));
 	
 	
 	
@@ -249,7 +253,7 @@ void PhongMesh::VertexStage(const std::vector<PhongMeshData>& vertices_in, std::
 	vertices_out.resize(vertices_in.size());
 	const Matrix<float> worldViewProjectionMatrix = m_WorldMatrix * camera.GetViewProjectionMatrix();
 
-	std::transform(std::execution::par, vertices_in.cbegin(), vertices_in.cend(), vertices_out.begin(),
+	std::transform(std::execution::seq, vertices_in.cbegin(), vertices_in.cend(), vertices_out.begin(),
 	               [&](const PhongMeshData& v)
 	               {
 		               Vector4 transformedPoint = worldViewProjectionMatrix.TransformPoint(Vector4{v.position, 1});
