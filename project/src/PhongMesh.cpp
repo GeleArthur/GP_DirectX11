@@ -84,10 +84,20 @@ PhongMesh::PhongMesh(ID3D11Device* pDevice): m_pDevice(pDevice)
 
 PhongMesh::~PhongMesh() = default;
 
-void PhongMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& scene) // Camera should not be here
+void PhongMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& scene)
 {
+	// TODO Move searching for variables to meshload
 	ID3DX11EffectShaderResourceVariable* diffuseMap = m_Effect->GetVariableByName("gDiffuseMap")->AsShaderResource();
 	CallDirectX(diffuseMap->SetResource(m_DiffuseTexture->D3D11GetTexture2D()));
+
+	ID3DX11EffectShaderResourceVariable* normalMap = m_Effect->GetVariableByName("gNormalMap")->AsShaderResource();
+	CallDirectX(normalMap->SetResource(m_NormalTexture->D3D11GetTexture2D()));
+
+	ID3DX11EffectShaderResourceVariable* glossMap = m_Effect->GetVariableByName("gGlossMap")->AsShaderResource();
+	CallDirectX(glossMap->SetResource(m_GlossTexture->D3D11GetTexture2D()));
+
+	ID3DX11EffectShaderResourceVariable* specularMap = m_Effect->GetVariableByName("gSpecularMap")->AsShaderResource();
+	CallDirectX(specularMap->SetResource(m_SpecularTexture->D3D11GetTexture2D()));
 	
 	ID3DX11EffectMatrixVariable* projectionMatrix = m_Effect->GetVariableByName("gWorldViewProj")->AsMatrix();
 	CallDirectX(projectionMatrix->SetMatrix((m_WorldMatrix * scene.GetCamera().GetViewProjectionMatrix()).GetFloatArray()));
@@ -100,7 +110,12 @@ void PhongMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& 
 	
 	ID3DX11EffectVectorVariable* lightDirection = m_Effect->GetVariableByName("gLightDirection")->AsVector();
 	CallDirectX(lightDirection->SetFloatVector(Vector4{scene.GetLights()[0], 0.0f}.GetFloatArray()));
-	
+
+	ID3DX11EffectScalarVariable* shininess = m_Effect->GetVariableByName("gShininess")->AsScalar();
+	CallDirectX(shininess->SetFloat(m_Shininess));
+
+	ID3DX11EffectScalarVariable* diffuseReflectance = m_Effect->GetVariableByName("gDiffuseReflectance")->AsScalar();
+	CallDirectX(diffuseReflectance->SetFloat(m_DiffuseReflectance));
 	
 	
 	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -159,6 +174,8 @@ void PhongMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
 		{
 			normal = vertexIn.normal.Normalized();
 		}
+
+		// return ColorRGB{normal.x, normal.y, normal.z};
     	
 		const Vector3 lightDirection = scene.GetLights().at(0).Normalized(); // TODO: Multilight
 		const ColorRGB albedoTexture = m_DiffuseTexture->Sample(vertexIn.uv);
@@ -166,7 +183,6 @@ void PhongMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
 
 		// lambert
 		const float observableArea = std::max<float>(0.0f, Vector3::Dot(-lightDirection, normal));
-
 		const ColorRGB lambert = (m_DiffuseReflectance * albedoTexture) / Utils::PI;
 
 		// Phong
@@ -194,7 +210,7 @@ void PhongMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
 			break;
 		}
 
-
+		// finalColor = ColorRGB{phong};
 
 		return finalColor;
     });

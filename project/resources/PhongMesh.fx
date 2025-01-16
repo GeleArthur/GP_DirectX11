@@ -1,3 +1,5 @@
+#define PI 3.14159265358979323846
+
 struct VS_INPUT
 {
     float3 position: POSITION;
@@ -27,11 +29,21 @@ Texture2D gSpecularMap : SpecularMap;
 float3 gWorldPosition: WorldPosition;
 float3 gLightDirection: LightDirection;
 
+float gShininess : Shininess;
+float gDiffuseReflectance : DiffuseReflectance;
+
+
 SamplerState samplePoint
 {
     Filter = MIN_MAG_MIP_POINT;
     AddressU = Wrap;
     AddressV = Wrap;
+};
+
+float3 MaxToOne(float3 color) {
+    float maxValue = max(max(max(color.r, color.g), color.b), 1.0f);
+    
+    return color / maxValue;
 };
 
 
@@ -40,8 +52,8 @@ VS_OUTPUT VS(VS_INPUT input)
     VS_OUTPUT output = (VS_OUTPUT)0;
     output.position = mul(float4(input.position, 1.f), gWorldViewProj);
     output.uv = input.uv;
-    output.normal = mul(float4(input.normal, 0.f), gWorldMatrix).xyz;
-    output.tangent = mul(float4(input.tangent, 0.f), gWorldMatrix).xyz;
+    output.normal = mul(input.normal, (float3x3)gWorldMatrix);
+    output.tangent = mul(input.tangent, (float3x3)gWorldMatrix);
     output.viewDirection = normalize((gWorldPosition - mul(float4(input.position, 1.f), gWorldMatrix)).xyz);
     
     return output;
@@ -49,12 +61,37 @@ VS_OUTPUT VS(VS_INPUT input)
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    //return float4(input.Uv.x, input.Uv.y, 0.0, 1.0);
+    float3 finalColor = 0;
+
+    float3 normalMap = (gNormalMap.Sample(samplePoint, input.uv).rgb * 2.0) - 1.0;
+    float3 binormal = cross(normalize(input.normal), normalize(input.tangent)); // This can be moved to vertex
+
+    float3 newNormal = (normalMap.x * input.normal) + (normalMap.y * input.tangent) + (normalMap.z * binormal);
+
+    // finalColor = normalize(input.normal);
+
+
+	// const Vector3 lightDirection = scene.GetLights().at(0).Normalized(); // TODO: Multilight
+    float3 albedoTexture = gDiffuseMap.Sample(samplePoint, input.uv).rgb;
+
+    // lambert
     float observableArea = max(0.0f, dot(-gLightDirection, normalize(input.normal)));
+    float3 lambert = (gDiffuseReflectance * albedoTexture) / PI;
+
+    // Phong
+    float specularReflectance = gSpecularMap.Sample(samplePoint, input.uv).r;
+    float gloss = gGlossMap.Sample(samplePoint, input.uv).r * gShininess;
+
+    float3 reflect1 = reflect(-gLightDirection, normalize(input.normal));
+    float cosAngle = max(0.0f, dot(reflect1, -input.viewDirection));
+
+    float phong = specularReflectance * pow(cosAngle, gloss);
+
+    finalColor = (albedoTexture * 0.3f) + phong + lambert * observableArea;
 
 
-    // float3 rgbColor = gDiffuseMap.Sample(samplePoint, input.uv).xyz;
-    return float4(observableArea, observableArea, observableArea, 1.0f);
+
+    return float4(MaxToOne(finalColor), 1.0f);
 };
 
 technique11 DefaultTechnique
