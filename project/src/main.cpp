@@ -5,6 +5,8 @@
 #endif
 
 #undef main
+#include <array>
+
 #include "RendererCombined.h"
 
 
@@ -49,9 +51,12 @@ int main(int argc, char* args[])
 	pTimer.Start();
 	float printTimer = 0.f;
 	bool isLooping = true;
+
+	
 	
 	while (isLooping)
 	{
+		
 		//--------- Get input events ---------
 		SDL_Event e;
 		while (SDL_PollEvent(&e))
@@ -61,6 +66,7 @@ int main(int argc, char* args[])
 			case SDL_QUIT:
 				isLooping = false;
 				break;
+				
 			case SDL_KEYUP:
 				// SHARED
 				if (e.key.keysym.scancode == SDL_SCANCODE_F1)
@@ -88,7 +94,7 @@ int main(int argc, char* args[])
 				// HARDWARE
 				if (e.key.keysym.scancode == SDL_SCANCODE_F3)
 				{
-					
+					pRenderer->DisableAllFireFx();
 				}
 				if (e.key.keysym.scancode == SDL_SCANCODE_F4)
 				{

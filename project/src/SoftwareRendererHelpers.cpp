@@ -28,7 +28,7 @@ const std::vector<float>& SoftwareRendererHelper::GetDepthBuffer()
     return m_DepthBuffer;
 }
 
-void SoftwareRendererHelper::SetCullMode(CullMode mode)
+void SoftwareRendererHelper::SetCullMode(const CullMode mode)
 {
     m_CullMode = mode;
 }

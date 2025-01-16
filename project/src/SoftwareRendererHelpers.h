@@ -29,8 +29,9 @@ public:
     SoftwareRendererHelper(int width, int height, SDL_Surface* backBuffer);
 
     void ClearDepthBuffer();
-    [[nodiscard]] float GetLastDepth() const;
+    float GetLastDepth() const;
     const std::vector<float>& GetDepthBuffer();
+    
     void SetCullMode(CullMode mode);
     void ToggleDrawDepthBuffer();
     void ToggleDrawBoundingBox();

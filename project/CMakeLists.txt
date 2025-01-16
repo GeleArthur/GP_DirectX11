@@ -17,6 +17,8 @@ set(SOURCES
         "src/SoftwareRendererHelpers.h"
         "src/PhongMesh.h"
         "src/PhongMesh.cpp"
+        "src/FireFX.h"
+        "src/FireFX.cpp"
 
         "src/Camera.h"
         "src/Camera.cpp"

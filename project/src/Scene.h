@@ -8,6 +8,9 @@
 #include "ColorRGB.h"
 
 
+class FireFX;
+class PhongMesh;
+
 class Scene {
 public:
     void SetupCamera(float aspect, float _fovAngle = 90.f, Vector3 _origin = {0.f,0.f,0.f}, float _nearPlane = 1.0f, float _farPlane = 1000.f);
@@ -15,7 +18,7 @@ public:
     void AddLight(const Vector3& direction);
     void SetBackGroundColor(const ColorRGB& color);
 
-    const std::vector<std::unique_ptr<BaseMeshEffect>>& GetAllMeshes() const; // could I return an iterator?
+    const std::vector<std::unique_ptr<BaseMeshEffect>>& GetAllMeshes() const;
     const Camera& GetCamera() const;
     const std::vector<Vector3>& GetLights() const;
     const ColorRGB& GetBackGroundColor() const;
@@ -24,6 +27,8 @@ public:
 
 private:
     std::vector<std::unique_ptr<BaseMeshEffect>> m_MeshesToRender{};
+    std::vector<BaseMeshEffect*> m_MeshesToRenderTransparent{};
+    std::vector<BaseMeshEffect*> m_MeshesToRenderOpaque{};
     Camera m_Camera;
     std::vector<Vector3> m_DirectionLights{};
     ColorRGB m_BackGroundColor{};

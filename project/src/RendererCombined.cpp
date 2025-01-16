@@ -6,6 +6,7 @@
 #include "Texture.h"
 #include "Utils.h"
 #include "DirectXUtils.h"
+#include "FireFX.h"
 #include "PhongMesh.h"
 
 extern ID3D11Debug* d3d11Debug;
@@ -17,7 +18,6 @@ RendererCombined::RendererCombined(SDL_Window* pWindow) :
 	
 	CallDirectX(InitializeDirectX());
 	InitSoftware();
-	SetCullMode();
 
 	LoadScene();
 }
@@ -33,10 +33,6 @@ RendererCombined::~RendererCombined()
 	m_pRenderTargetBuffer->Release();
 	m_pSwapChain->Release();
 
-	m_RasterizerStateCullBack->Release();
-	m_RasterizerStateCullFront->Release();
-	m_RasterizerStateCullNone->Release();
-	
 	if (m_pDeviceContext)
 	{
 		m_pDeviceContext->ClearState();
@@ -119,16 +115,7 @@ HRESULT RendererCombined::InitializeDirectX()
 	viewport.MaxDepth = 1.0f;
 	m_pDeviceContext->RSSetViewports(1, &viewport);
 
-	D3D11_RASTERIZER_DESC rasterizerConfig{};
-	rasterizerConfig.FillMode = D3D11_FILL_SOLID;
-	rasterizerConfig.CullMode = D3D11_CULL_NONE;
-	rasterizerConfig.FrontCounterClockwise = false;
-	rasterizerConfig.DepthClipEnable = true;
-	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &m_RasterizerStateCullNone));
-	rasterizerConfig.CullMode = D3D11_CULL_FRONT;
-	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &m_RasterizerStateCullFront));
-	rasterizerConfig.CullMode = D3D11_CULL_BACK;
-	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &m_RasterizerStateCullBack));
+
 
 	
 	D3D11_SAMPLER_DESC config{};
@@ -165,55 +152,56 @@ void RendererCombined::InitSoftware()
 	m_SoftwareHelper = std::make_unique<SoftwareRendererHelper>(m_Width, m_Height, m_pBackBuffer);
 }
 
-void RendererCombined::SetCullMode() const
-{
-	switch (m_ActiveCullMode)
-	{
-	case CullMode::none:
-		m_pDeviceContext->RSSetState(m_RasterizerStateCullNone);
-		break;
-	case CullMode::front:
-		m_pDeviceContext->RSSetState(m_RasterizerStateCullFront);
-		break;
-	case CullMode::back:
-		m_pDeviceContext->RSSetState(m_RasterizerStateCullBack);
-		break;
-	}
-	m_SoftwareHelper->SetCullMode(m_ActiveCullMode);
-}
 
 void RendererCombined::LoadScene()
 {
 	m_ActiveScene.SetupCamera(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-50.0f});
 	m_ActiveScene.SetBackGroundColor({0.1f,0.1f,0.1f});
-	
-	Utils::ParsedObj vechicle = Utils::ParseOBJ("resources/vehicle2obj.obj", false);
-	
-	std::vector<PhongMeshData> phongData;
-	phongData.reserve(vechicle.indices.size());
-	
-	for (int i = 0; i < vechicle.indices.size(); ++i)
-	{
-		phongData.emplace_back(vechicle.positions[i], vechicle.uv[i], vechicle.normal[i], vechicle.tangent[i]);
-	}
-	
-	auto meshVechicle = std::make_unique<PhongMesh>(m_pDevice);
-	meshVechicle->LoadMeshData(std::move(phongData), std::move(vechicle.indices), "Resources/vehicle_diffuse.png", "Resources/vehicle_normal.png", "Resources/vehicle_gloss.png", "Resources/vehicle_specular.png");
-	m_ActiveScene.AddMesh(std::move(meshVechicle));
-	
-	auto plane = Utils::ParseOBJ("resources/plane.obj", false);
-	std::vector<UnlitData> unlitData;
-	unlitData.clear();
-	unlitData.reserve(plane.indices.size());
 
-	for (size_t i = 0; i < plane.indices.size(); ++i)
 	{
-		unlitData.emplace_back(plane.positions[i], plane.uv[i]);
+		Utils::ParsedObj vechicle = Utils::ParseOBJ("resources/vehicle2obj.obj", false);
+		
+		std::vector<PhongMeshData> phongData;
+		phongData.reserve(vechicle.indices.size());
+		
+		for (int i = 0; i < vechicle.indices.size(); ++i)
+		{
+			phongData.emplace_back(vechicle.positions[i], vechicle.uv[i], vechicle.normal[i], vechicle.tangent[i]);
+		}
+		
+		auto meshVechicle = std::make_unique<PhongMesh>(m_pDevice);
+		meshVechicle->LoadMeshData(std::move(phongData), std::move(vechicle.indices), "Resources/vehicle_diffuse.png", "Resources/vehicle_normal.png", "Resources/vehicle_gloss.png", "Resources/vehicle_specular.png");
+		m_ActiveScene.AddMesh(std::move(meshVechicle));
+	}
+	{
+		Utils::ParsedObj fireFXModel = Utils::ParseOBJ("resources/fireFX.obj", false);
+	
+		std::vector<FireFXData> fireFXData;
+		fireFXData.reserve(fireFXModel.indices.size());
+	
+		for (int i = 0; i < fireFXModel.indices.size(); ++i)
+		{
+			fireFXData.emplace_back(fireFXModel.positions[i], fireFXModel.uv[i]);
+		}
+		
+		auto meshVechicle = std::make_unique<FireFX>(m_pDevice);
+		meshVechicle->LoadMeshData(std::move(fireFXData), std::move(fireFXModel.indices), "Resources/fireFX_diffuse.png");
+		m_ActiveScene.AddMesh(std::move(meshVechicle));
 	}
 	
-	auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
-	mesh->LoadMeshData(std::move(unlitData), std::move(plane.indices), "Resources/small.png");
-	m_ActiveScene.AddMesh(std::move(mesh));
+	// auto plane = Utils::ParseOBJ("resources/plane.obj", false);
+	// std::vector<UnlitData> unlitData;
+	// unlitData.clear();
+	// unlitData.reserve(plane.indices.size());
+	//
+	// for (size_t i = 0; i < plane.indices.size(); ++i)
+	// {
+	// 	unlitData.emplace_back(plane.positions[i], plane.uv[i]);
+	// }
+	//
+	// auto mesh = std::make_unique<UnlitMesh>(m_pDevice);
+	// mesh->LoadMeshData(std::move(unlitData), std::move(plane.indices), "Resources/small.png");
+	// m_ActiveScene.AddMesh(std::move(mesh));
 
 
 	m_ActiveScene.AddLight({0.577f, -0.577f, 0.577});
@@ -239,8 +227,15 @@ void RendererCombined::NextCullMode()
 		m_ActiveCullMode = CullMode::none;
 		break;
 	}
-	SetCullMode();
+	m_SoftwareHelper->SetCullMode(m_ActiveCullMode);
 
+	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
+	{
+		if (auto const pointer = dynamic_cast<PhongMesh*>(mesh.get()); pointer != nullptr)
+		{
+			pointer->SetCullMode(m_ActiveCullMode);
+		}
+	}
 	
 	std::cout << "CullMode: " << magic_enum::enum_name(m_ActiveCullMode) << '\n';
 }
@@ -277,34 +272,70 @@ void RendererCombined::ToggleNormalMap() const
 	}
 }
 
-void RendererCombined::NextShadingMode() const
+void RendererCombined::NextShadingMode()
 {
-	std::cout << "ShadingMode Change\n";
+	switch (m_ShadingMode)
+	{
+	case ShadingMode::observed_area:
+		m_ShadingMode = ShadingMode::diffuse;
+		break;
+	case ShadingMode::diffuse:
+		m_ShadingMode = ShadingMode::specular;
+		break;
+	case ShadingMode::specular:
+		m_ShadingMode = ShadingMode::combined;
+		break;
+	case ShadingMode::combined:
+		m_ShadingMode = ShadingMode::observed_area;
+		break;
+	}
+	
+	std::cout << "ShadingMode: " << magic_enum::enum_name(m_ShadingMode) << '\n';
 	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
 	{
 		if (auto const pointer = dynamic_cast<PhongMesh*>(mesh.get()); pointer != nullptr)
 		{
-			pointer->NextShadingMode();
+			pointer->SetShadingMode(m_ShadingMode);
 		}
 	}
 }
 
+void RendererCombined::DisableAllFireFx() const
+{
+	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
+	{
+		if (auto const pointer = dynamic_cast<FireFX*>(mesh.get()); pointer != nullptr)
+		{
+			pointer->ToggleEnabled();
+		}
+	}
+	std::cout << "Toggle FireFX\n";
+}
+
 void RendererCombined::ToggleSampleMode()
 {
-	switch (m_CurrentSampleMode)
+	switch (m_SampleMode)
 	{
-	case TextureSampleMethod::point:
-		m_CurrentSampleMode = TextureSampleMethod::linear;
+	case SampleMethod::point:
+		m_SampleMode = SampleMethod::linear;
 		break;
-	case TextureSampleMethod::linear:
-		m_CurrentSampleMode = TextureSampleMethod::anisotropic;
+	case SampleMethod::linear:
+		m_SampleMode = SampleMethod::anisotropic;
 		break;
-	case TextureSampleMethod::anisotropic:
-		m_CurrentSampleMode = TextureSampleMethod::point;
+	case SampleMethod::anisotropic:
+		m_SampleMode = SampleMethod::point;
 		break;
 	}
 
-	std::cout << "Using: " << magic_enum::enum_name(m_CurrentSampleMode) << std::endl;
+	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
+	{
+		if (auto const pointer = dynamic_cast<PhongMesh*>(mesh.get()); pointer != nullptr)
+		{
+			pointer->SetSamplelingMode(m_SampleMode);
+		}
+	}
+
+	std::cout << "SampleMode: " << magic_enum::enum_name(m_SampleMode) << '\n';
 
 }
 
@@ -334,10 +365,11 @@ void RendererCombined::RenderDirectX() const
 	
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, backgroundColor);
 	m_pDeviceContext->ClearDepthStencilView(m_pDepthStecilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0.0f);
-
+	
 	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
 	{
-		mesh->RenderDirectX(m_pDeviceContext, m_ActiveScene);
+		if (mesh->IsEnabled())
+			mesh->RenderDirectX(m_pDeviceContext, m_ActiveScene);
 	}
 
 	m_pSwapChain->Present(0, 0);
@@ -368,7 +400,8 @@ void RendererCombined::RenderSoftware() const
 
 	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
 	{
-		mesh->RenderSoftware(m_SoftwareHelper.get(), m_ActiveScene);
+		if (mesh->IsEnabled())
+			mesh->RenderSoftware(m_SoftwareHelper.get(), m_ActiveScene);
 	}
 
 	SDL_UnlockSurface(m_pBackBuffer);

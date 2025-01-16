@@ -11,13 +11,6 @@ struct Camera;
 struct SDL_Window;
 struct SDL_Surface;
 
-enum class TextureSampleMethod : uint8_t
-{
-	point,
-	linear,
-	anisotropic
-};
-
 class RendererCombined final
 {
 public:
@@ -41,30 +34,32 @@ public:
 	void ToggleDepthBuffer() const;
 	void ToggleBoundingBoxDraw() const;
 	void ToggleNormalMap() const;
-	void NextShadingMode() const;
+	void NextShadingMode();
+	void DisableAllFireFx() const;
+
 
 private:
 	HRESULT InitializeDirectX();
 	void InitSoftware();
-	void SetCullMode() const;
 	
-	SDL_Window* m_pWindow{};
-
+	SDL_Window* m_pWindow{};	
 	int m_Width{};
 	int m_Height{};
 	
-	Scene m_ActiveScene{};
 
+	// --------- Shared ---------
+	Scene m_ActiveScene{};
 	bool m_UseSceneBackgroundColor{false};
 	CullMode m_ActiveCullMode{CullMode::back};
-	// --------- SOFTWARE ---------
-
+	
+	// --------- Software ---------
 	std::unique_ptr<SoftwareRendererHelper> m_SoftwareHelper;
 	SDL_Surface* m_pFrontBuffer{};
 	SDL_Surface* m_pBackBuffer{};
-	bool m_DrawDepthBuffer{};
 
-	// --------- DirectX ---------
+	// --------- Hardware ---------
+	ShadingMode m_ShadingMode{ShadingMode::combined};
+	
 	ID3D11Device* m_pDevice{};
 	ID3D11DeviceContext* m_pDeviceContext{};
 	IDXGISwapChain* m_pSwapChain{};
@@ -73,13 +68,9 @@ private:
 	ID3D11Resource* m_pRenderTargetBuffer{};
 	ID3D11RenderTargetView* m_pRenderTargetView{};
 
-	TextureSampleMethod m_CurrentSampleMode{TextureSampleMethod::anisotropic};
+	SampleMethod m_SampleMode{SampleMethod::anisotropic};
 
 	ID3D11SamplerState* m_pLinearMode{};
 	ID3D11SamplerState* m_pPointMode{};
 	ID3D11SamplerState* m_pAnisotropicMode{};
-	
-	ID3D11RasterizerState* m_RasterizerStateCullNone;
-	ID3D11RasterizerState* m_RasterizerStateCullFront;
-	ID3D11RasterizerState* m_RasterizerStateCullBack;
 };

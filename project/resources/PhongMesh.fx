@@ -34,7 +34,7 @@ float gShininess : Shininess;
 float gDiffuseReflectance : DiffuseReflectance;
 
 
-SamplerState samplePoint
+SamplerState sampleMode
 {
     Filter = MIN_MAG_MIP_POINT;
     AddressU = Wrap;
@@ -70,7 +70,7 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     float3 normalizeBinormal = normalize(input.binormal);
     float3x3 tangentSpaceAxis = {normalizeTangent, normalizeBinormal, normalizeNormal};
     
-    float3 normalMap = gNormalMap.Sample(samplePoint, input.uv).rgb; // Incress range
+    float3 normalMap = gNormalMap.Sample(sampleMode, input.uv).rgb; // Incress range
     normalMap = (2.0f * normalMap) - 1.0f;
     float3 normal = mul(normalMap, tangentSpaceAxis);
 
@@ -78,15 +78,15 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
 
 
 	// const Vector3 lightDirection = scene.GetLights().at(0).Normalized(); // TODO: Multilight
-    float3 albedoTexture = gDiffuseMap.Sample(samplePoint, input.uv).rgb;
+    float3 albedoTexture = gDiffuseMap.Sample(sampleMode, input.uv).rgb;
 
     // lambert
     float observableArea = max(0.0f, dot(-gLightDirection, normalize(normal)));
     float3 lambert = (gDiffuseReflectance * albedoTexture) / PI;
 
     // Phong
-    float specularReflectance = gSpecularMap.Sample(samplePoint, input.uv).r;
-    float gloss = gGlossMap.Sample(samplePoint, input.uv).r * gShininess;
+    float specularReflectance = gSpecularMap.Sample(sampleMode, input.uv).r;
+    float gloss = gGlossMap.Sample(sampleMode, input.uv).r * gShininess;
 
     float3 reflect1 = reflect(-gLightDirection, normalize(normal));
     float cosAngle = max(0.0f, dot(reflect1, -input.viewDirection));
@@ -95,15 +95,51 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
 
     finalColor = (albedoTexture * 0.3f) + phong + lambert * observableArea;
 
-
-
     return float4(MaxToOne(finalColor), 1.0f);
+};
+
+BlendState gBlendState 
+{
+    BlendEnable[0] = false;
+    SrcBlend = one;
+    DestBlend = zero;
+    BlendOp = add;
+    SrcBlendAlpha = one;
+    DestBlendAlpha = zero;
+    BlendOpAlpha = add;
+    RenderTargetWriteMask[0] = 0xFF;
+};
+
+DepthStencilState gDepthStencilState
+{
+    DepthEnable = true;
+    DepthWriteMask = all;
+    DepthFunc = less;
+
+    StencilEnable = false;
+
+    StencilReadMask = 0x0F;
+    StencilWriteMask = 0x0F;
+
+    FrontFaceStencilFunc = always;
+    BackFaceStencilFunc = always;
+
+    FrontFaceStencilDepthFail = keep;
+    BackFaceStencilDepthFail = keep;
+
+    FrontFaceStencilPass = keep;
+    BackFaceStencilPass = keep;
+
+    FrontFaceStencilFail = keep;
+    BackFaceStencilFail = keep;
 };
 
 technique11 DefaultTechnique
 {
     pass P0
     {
+        SetBlendState(gBlendState, float4(0.0f,0.0f,0.0f,0.0f), 0xFFFFFFFF);
+        SetDepthStencilState(gDepthStencilState, 0);
         SetVertexShader(CompileShader(vs_5_0, VS()));
         SetGeometryShader(NULL);
         SetPixelShader(CompileShader(ps_5_0, PS()));

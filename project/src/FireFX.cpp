@@ -1,0 +1,195 @@
+#include "FireFX.h"
+
+#include <execution>
+
+#include "DirectXUtils.h"
+#include "RendererCombined.h"
+#include "Texture.h"
+#include "Utils.h"
+
+#include "SoftwareRendererHelpers.h"
+#include "TextureManager.h"
+
+
+// Everything in here is using the same layout just the buffers are diffrent
+std::weak_ptr<ID3DX11Effect> FireFX::resourceEffect{};
+std::weak_ptr<ID3DX11EffectTechnique> FireFX::resourceTechnique{};
+std::weak_ptr<ID3D11InputLayout> FireFX::resourceInputLayout{};
+
+FireFX::FireFX(ID3D11Device* pDevice): m_pDevice(pDevice)
+{
+    if (const auto effect = resourceEffect.lock())
+    {
+        m_Effect = effect;
+    }
+    else
+    {
+        m_Effect = std::shared_ptr<ID3DX11Effect>(
+            LoadEffect(pDevice, L"Resources/FireFX.fx"),
+            callRelease<ID3DX11Effect>());
+        resourceEffect = m_Effect;
+    }
+
+    if (const auto technique = resourceTechnique.lock())
+    {
+        m_Technique = technique;
+    }
+    else
+    {
+        m_Technique = std::shared_ptr<ID3DX11EffectTechnique>(
+            m_Effect->GetTechniqueByName("DefaultTechnique"),
+            callRelease<ID3DX11EffectTechnique>());
+        resourceTechnique = m_Technique;
+    }
+
+    if (const auto layout = resourceInputLayout.lock())
+    {
+        m_InputLayout = layout;
+    }
+    else
+    {
+        static constexpr uint32_t numElements{ 2 };
+        D3D11_INPUT_ELEMENT_DESC vertexDesc[numElements]{};
+
+        vertexDesc[0].SemanticName = "POSITION";
+        vertexDesc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+        vertexDesc[0].AlignedByteOffset = 0;
+        vertexDesc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+
+        vertexDesc[1].SemanticName = "TEXCOORD";
+        vertexDesc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+        vertexDesc[1].AlignedByteOffset = 12;
+        vertexDesc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+    	
+        D3DX11_PASS_DESC passDesc{};
+        CallDirectX(m_Technique->GetPassByIndex(0)->GetDesc(&passDesc));
+
+        ID3D11InputLayout* inputLayout;
+        CallDirectX(pDevice->CreateInputLayout(vertexDesc, numElements, passDesc.pIAInputSignature, passDesc.IAInputSignatureSize, &inputLayout));
+
+        m_InputLayout = std::shared_ptr<ID3D11InputLayout>(inputLayout, callRelease<ID3D11InputLayout>());
+        resourceInputLayout = m_InputLayout;
+    }
+}
+
+FireFX::~FireFX() = default;
+
+void FireFX::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& scene)
+{
+	// TODO Move searching for variables to meshload
+	ID3DX11EffectShaderResourceVariable* diffuseMap = m_Effect->GetVariableByName("gDiffuseMap")->AsShaderResource();
+	CallDirectX(diffuseMap->SetResource(m_DiffuseTexture->D3D11GetTexture2D()));
+
+	ID3DX11EffectMatrixVariable* projectionMatrix = m_Effect->GetVariableByName("gWorldViewProj")->AsMatrix();
+	CallDirectX(projectionMatrix->SetMatrix((m_WorldMatrix * scene.GetCamera().GetViewProjectionMatrix()).GetFloatArray()));
+
+	
+	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pDeviceContext->IASetInputLayout(m_InputLayout.get()); // Source of bad
+	
+	constexpr UINT stride = static_cast<UINT>(sizeof(FireFXData));
+	constexpr UINT offset = 0;
+	
+	ID3D11Buffer* vertexBuffer = m_pVertexBuffer.get(); // ??????? why
+	pDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride ,&offset);
+	
+	ID3D11Buffer* indexBuffer = m_pIndexBuffer.get();
+	pDeviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	
+	D3DX11_TECHNIQUE_DESC techDesc;
+	m_Technique->GetDesc(&techDesc);
+	
+	for (UINT i = 0; i < techDesc.Passes; ++i)
+	{
+		ID3DX11EffectPass* index = m_Technique->GetPassByIndex(i);
+		index->Apply(0, pDeviceContext);
+		pDeviceContext->DrawIndexed(static_cast<UINT>(m_Indices.size()), 0, 0); // m_Indices is from software should be moved into it own number
+		index->Release();
+	}
+	
+}
+
+void FireFX::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Scene& scene)
+{
+    VertexStage(m_VertexData, m_VertexDataOut, scene.GetCamera());
+	m_TrianglesOut.clear();
+	softwareRendererHelper->GetTriangles(m_Indices.begin(), m_Indices.end(), m_VertexDataOut.begin(), m_TrianglesOut);
+    softwareRendererHelper->RasterizeTriangle<FireFXDataVertexOut>(m_TrianglesOut, [&](const FireFXDataVertexOut& vertexIn)
+    {
+    	const ColorRGB albedoTexture = m_DiffuseTexture->Sample(vertexIn.uv);
+		return albedoTexture;
+    });
+}
+
+void FireFX::LoadMeshData(std::vector<FireFXData>&& vertexData, std::vector<uint32_t>&& indices,const std::string& diffuseTextureFilePath)
+{
+    m_VertexData = std::move(vertexData);
+    m_Indices = std::move(indices);
+    m_DiffuseTexture = TextureManager::GetTexture(diffuseTextureFilePath, m_pDevice);
+	
+    D3D11_BUFFER_DESC vertexBuffer{};
+    vertexBuffer.Usage = D3D11_USAGE_IMMUTABLE;
+    vertexBuffer.ByteWidth = sizeof(FireFXData) * static_cast<uint32_t>(m_VertexData.size());
+    vertexBuffer.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    vertexBuffer.CPUAccessFlags = 0;
+    vertexBuffer.MiscFlags = 0;
+    
+    ID3D11Buffer* pVertexBuffer;
+
+    D3D11_SUBRESOURCE_DATA initData{};
+    initData.pSysMem = m_VertexData.data();
+    CallDirectX(m_pDevice->CreateBuffer(&vertexBuffer, &initData, &pVertexBuffer));
+
+    m_pVertexBuffer = std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>>(pVertexBuffer, callRelease<ID3D11Buffer>());
+
+    D3D11_BUFFER_DESC indexBufferDesc{};
+    indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+    indexBufferDesc.ByteWidth = sizeof(uint32_t) * static_cast<uint32_t>(m_Indices.size());
+    indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    indexBufferDesc.CPUAccessFlags = 0;
+    indexBufferDesc.MiscFlags = 0;
+	
+    initData.pSysMem = m_Indices.data();
+    ID3D11Buffer* pIndexBuffer;
+    CallDirectX(m_pDevice->CreateBuffer(&indexBufferDesc, &initData, &pIndexBuffer));
+    
+    m_pIndexBuffer = std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>>(pIndexBuffer, callRelease<ID3D11Buffer>());
+}
+
+void FireFX::SetWorldMatrix(const Matrix<float> matrix)
+{
+	m_WorldMatrix = matrix;
+}
+
+void FireFX::ToggleEnabled()
+{
+	m_IsEnabled = !m_IsEnabled;
+}
+
+bool FireFX::IsEnabled()
+{
+	return m_IsEnabled;
+}
+
+
+void FireFX::VertexStage(const std::vector<FireFXData>& vertices_in, std::vector<FireFXDataVertexOut>& vertices_out, const Camera& camera) const
+{
+	vertices_out.resize(vertices_in.size());
+	const Matrix<float> worldViewProjectionMatrix = m_WorldMatrix * camera.GetViewProjectionMatrix();
+
+	std::transform(std::execution::seq, vertices_in.cbegin(), vertices_in.cend(), vertices_out.begin(),
+	               [&](const FireFXData& v)
+	               {
+		               Vector4 transformedPoint = worldViewProjectionMatrix.TransformPoint(Vector4{v.position, 1});
+
+		               // TODO: Move this after the frustum culling
+		               transformedPoint.x = transformedPoint.x / transformedPoint.w;
+		               transformedPoint.y = transformedPoint.y / transformedPoint.w;
+		               transformedPoint.z = transformedPoint.z / transformedPoint.w;
+
+		               return FireFXDataVertexOut{
+			               .position = transformedPoint,
+			               .uv = v.uv,
+		               };
+	               });
+}

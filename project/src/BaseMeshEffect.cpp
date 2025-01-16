@@ -3,6 +3,11 @@
 #include <sstream>
 #include <iostream>
 
+bool BaseMeshEffect::IsEnabled()
+{
+    return true;
+}
+
 ID3DX11Effect* BaseMeshEffect::LoadEffect(ID3D11Device *pDevice, const std::wstring &assetFile)
 {
     HRESULT result;

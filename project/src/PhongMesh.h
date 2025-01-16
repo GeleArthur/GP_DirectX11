@@ -33,13 +33,6 @@ struct PhongMeshDataVertexOut
     }
 };
 
-enum class ShadingMode
-{
-    observed_area,
-    diffuse,
-    specular,
-    combined
-};
 
 class PhongMesh final : public BaseMeshEffect
 {
@@ -58,7 +51,9 @@ public:
                       const std::string& glossTexture, const std::string& specularTexture);
     void SetWorldMatrix(Matrix<float> matrix) override;
     void ToggleNormalMap();
-    void NextShadingMode();
+    void SetShadingMode(ShadingMode shadingMode);
+    void SetCullMode(CullMode mode);
+    void SetSamplelingMode(SampleMethod shadingMode);
 
 private:
     // -- SoftWare
@@ -70,6 +65,9 @@ private:
     float m_DiffuseReflectance{7.0f};
     float m_Shininess{25.0f};
     ShadingMode m_ShadingMode{ShadingMode::combined};
+    SampleMethod m_SampleMode{SampleMethod::point};
+
+
 
     void VertexStage(const std::vector<PhongMeshData>& vertices_in, std::vector<PhongMeshDataVertexOut>& vertices_out, const Camera& camera) const;
 
@@ -79,11 +77,16 @@ private:
     std::shared_ptr<Texture> m_NormalTexture{};
     std::shared_ptr<Texture> m_GlossTexture{};
     std::shared_ptr<Texture> m_SpecularTexture{};
+    CullMode m_ActiveCullMode;
     
     // --- HardWare ---
     ID3D11Device* m_pDevice{};
     std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>> m_pVertexBuffer;
     std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>> m_pIndexBuffer;
+
+    std::unique_ptr<ID3D11RasterizerState, callRelease<ID3D11RasterizerState>> m_RasterizerStateCullNone;
+    std::unique_ptr<ID3D11RasterizerState, callRelease<ID3D11RasterizerState>> m_RasterizerStateCullFront;
+    std::unique_ptr<ID3D11RasterizerState, callRelease<ID3D11RasterizerState>> m_RasterizerStateCullBack;
 
     // Hold the references in this instances
     std::shared_ptr<ID3D11InputLayout> m_InputLayout;

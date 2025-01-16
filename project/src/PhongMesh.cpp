@@ -80,7 +80,69 @@ PhongMesh::PhongMesh(ID3D11Device* pDevice): m_pDevice(pDevice)
         m_InputLayout = std::shared_ptr<ID3D11InputLayout>(inputLayout, callRelease<ID3D11InputLayout>());
         resourceInputLayout = m_InputLayout;
     }
+
+	D3D11_RASTERIZER_DESC rasterizerConfig{};
+	rasterizerConfig.FillMode = D3D11_FILL_SOLID;
+	rasterizerConfig.CullMode = D3D11_CULL_NONE;
+	rasterizerConfig.FrontCounterClockwise = false;
+	rasterizerConfig.DepthClipEnable = true;
+
+	ID3D11RasterizerState* rasterizerState;
+	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &rasterizerState));
+	m_RasterizerStateCullNone = std::unique_ptr<ID3D11RasterizerState, callRelease<ID3D11RasterizerState>>(rasterizerState);
+	
+	rasterizerConfig.CullMode = D3D11_CULL_FRONT;
+	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &rasterizerState));
+	m_RasterizerStateCullFront = std::unique_ptr<ID3D11RasterizerState, callRelease<ID3D11RasterizerState>>(rasterizerState);
+
+	rasterizerConfig.CullMode = D3D11_CULL_BACK;
+	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &rasterizerState));
+	m_RasterizerStateCullBack = std::unique_ptr<ID3D11RasterizerState, callRelease<ID3D11RasterizerState>>(rasterizerState);
 }
+
+void PhongMesh::LoadMeshData(std::vector<PhongMeshData>&& vertexData, std::vector<uint32_t>&& indices,
+	const std::string& diffuseTextureFilePath,
+	const std::string& normalMapTexture,
+	const std::string& glossTexture,
+	const std::string& specularTexture
+	)
+{
+	m_VertexData = std::move(vertexData);
+	m_Indices = std::move(indices);
+	m_DiffuseTexture = TextureManager::GetTexture(diffuseTextureFilePath, m_pDevice);
+	m_NormalTexture = TextureManager::GetTexture(normalMapTexture, m_pDevice);
+	m_GlossTexture = TextureManager::GetTexture(glossTexture, m_pDevice);
+	m_SpecularTexture = TextureManager::GetTexture(specularTexture, m_pDevice);
+	
+	D3D11_BUFFER_DESC vertexBuffer{};
+	vertexBuffer.Usage = D3D11_USAGE_IMMUTABLE;
+	vertexBuffer.ByteWidth = sizeof(PhongMeshData) * static_cast<uint32_t>(m_VertexData.size());
+	vertexBuffer.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBuffer.CPUAccessFlags = 0;
+	vertexBuffer.MiscFlags = 0;
+    
+	ID3D11Buffer* pVertexBuffer;
+
+	D3D11_SUBRESOURCE_DATA initData{};
+	initData.pSysMem = m_VertexData.data();
+	CallDirectX(m_pDevice->CreateBuffer(&vertexBuffer, &initData, &pVertexBuffer));
+
+	m_pVertexBuffer = std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>>(pVertexBuffer, callRelease<ID3D11Buffer>());
+
+	D3D11_BUFFER_DESC indexBufferDesc{};
+	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	indexBufferDesc.ByteWidth = sizeof(uint32_t) * static_cast<uint32_t>(m_Indices.size());
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.MiscFlags = 0;
+	
+	initData.pSysMem = m_Indices.data();
+	ID3D11Buffer* pIndexBuffer;
+	CallDirectX(m_pDevice->CreateBuffer(&indexBufferDesc, &initData, &pIndexBuffer));
+    
+	m_pIndexBuffer = std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>>(pIndexBuffer, callRelease<ID3D11Buffer>());
+}
+
 
 PhongMesh::~PhongMesh() = default;
 
@@ -116,6 +178,20 @@ void PhongMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& 
 
 	ID3DX11EffectScalarVariable* diffuseReflectance = m_Effect->GetVariableByName("gDiffuseReflectance")->AsScalar();
 	CallDirectX(diffuseReflectance->SetFloat(m_DiffuseReflectance));
+
+
+	switch (m_ActiveCullMode)
+	{
+	case CullMode::none:
+		pDeviceContext->RSSetState(m_RasterizerStateCullNone.get());
+		break;
+	case CullMode::front:
+		pDeviceContext->RSSetState(m_RasterizerStateCullFront.get());
+		break;
+	case CullMode::back:
+		pDeviceContext->RSSetState(m_RasterizerStateCullBack.get());
+		break;
+	}
 	
 	
 	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -218,48 +294,32 @@ void PhongMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
     });
 }
 
-void PhongMesh::LoadMeshData(std::vector<PhongMeshData>&& vertexData, std::vector<uint32_t>&& indices,
-	const std::string& diffuseTextureFilePath,
-	const std::string& normalMapTexture,
-	const std::string& glossTexture,
-	const std::string& specularTexture
-	)
+void PhongMesh::VertexStage(const std::vector<PhongMeshData>& vertices_in, std::vector<PhongMeshDataVertexOut>& vertices_out, const Camera& camera) const
 {
-    m_VertexData = std::move(vertexData);
-    m_Indices = std::move(indices);
-    m_DiffuseTexture = TextureManager::GetTexture(diffuseTextureFilePath, m_pDevice);
-    m_NormalTexture = TextureManager::GetTexture(normalMapTexture, m_pDevice);
-    m_GlossTexture = TextureManager::GetTexture(glossTexture, m_pDevice);
-    m_SpecularTexture = TextureManager::GetTexture(specularTexture, m_pDevice);
-	
-    D3D11_BUFFER_DESC vertexBuffer{};
-    vertexBuffer.Usage = D3D11_USAGE_IMMUTABLE;
-    vertexBuffer.ByteWidth = sizeof(PhongMeshData) * static_cast<uint32_t>(m_VertexData.size());
-    vertexBuffer.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vertexBuffer.CPUAccessFlags = 0;
-    vertexBuffer.MiscFlags = 0;
-    
-    ID3D11Buffer* pVertexBuffer;
+	vertices_out.resize(vertices_in.size());
+	const Matrix<float> worldViewProjectionMatrix = m_WorldMatrix * camera.GetViewProjectionMatrix();
 
-    D3D11_SUBRESOURCE_DATA initData{};
-    initData.pSysMem = m_VertexData.data();
-    CallDirectX(m_pDevice->CreateBuffer(&vertexBuffer, &initData, &pVertexBuffer));
+	std::transform(std::execution::seq, vertices_in.cbegin(), vertices_in.cend(), vertices_out.begin(),
+				   [&](const PhongMeshData& v)
+				   {
+					   Vector4 transformedPoint = worldViewProjectionMatrix.TransformPoint(Vector4{v.position, 1});
 
-    m_pVertexBuffer = std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>>(pVertexBuffer, callRelease<ID3D11Buffer>());
+					   // TODO: Move this after the frustum culling
+					   transformedPoint.x = transformedPoint.x / transformedPoint.w;
+					   transformedPoint.y = transformedPoint.y / transformedPoint.w;
+					   transformedPoint.z = transformedPoint.z / transformedPoint.w;
 
-    D3D11_BUFFER_DESC indexBufferDesc{};
-    indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-    indexBufferDesc.ByteWidth = sizeof(uint32_t) * static_cast<uint32_t>(m_Indices.size());
-    indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    indexBufferDesc.CPUAccessFlags = 0;
-    indexBufferDesc.MiscFlags = 0;
-	
-    initData.pSysMem = m_Indices.data();
-    ID3D11Buffer* pIndexBuffer;
-    CallDirectX(m_pDevice->CreateBuffer(&indexBufferDesc, &initData, &pIndexBuffer));
-    
-    m_pIndexBuffer = std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>>(pIndexBuffer, callRelease<ID3D11Buffer>());
+					   return PhongMeshDataVertexOut{
+						   .position = transformedPoint,
+						   .uv = v.uv,
+						   .normal = m_WorldMatrix.TransformVector(v.normal).Normalized(), // TODO: I dont think I need to normalize
+						   .tangent = m_WorldMatrix.TransformVector(v.tangent).Normalized(),
+						   .viewDirection = (camera.GetWorldPosition() - (m_WorldMatrix.TransformPoint(v.position))).Normalized()
+					   };
+				   });
 }
+
+
 
 void PhongMesh::SetWorldMatrix(const Matrix<float> matrix)
 {
@@ -271,46 +331,18 @@ void PhongMesh::ToggleNormalMap()
 	m_UseNormalMaps = !m_UseNormalMaps;
 }
 
-void PhongMesh::NextShadingMode()
+void PhongMesh::SetShadingMode(const ShadingMode shadingMode)
 {
-	switch (m_ShadingMode)
-	{
-	case ShadingMode::observed_area:
-		m_ShadingMode = ShadingMode::diffuse;
-		break;
-	case ShadingMode::diffuse:
-		m_ShadingMode = ShadingMode::specular;
-		break;
-	case ShadingMode::specular:
-		m_ShadingMode = ShadingMode::combined;
-		break;
-	case ShadingMode::combined:
-		m_ShadingMode = ShadingMode::observed_area;
-		break;
-	}
+	m_ShadingMode = shadingMode;
 }
 
-void PhongMesh::VertexStage(const std::vector<PhongMeshData>& vertices_in, std::vector<PhongMeshDataVertexOut>& vertices_out, const Camera& camera) const
+void PhongMesh::SetCullMode(const CullMode mode)
 {
-	vertices_out.resize(vertices_in.size());
-	const Matrix<float> worldViewProjectionMatrix = m_WorldMatrix * camera.GetViewProjectionMatrix();
-
-	std::transform(std::execution::seq, vertices_in.cbegin(), vertices_in.cend(), vertices_out.begin(),
-	               [&](const PhongMeshData& v)
-	               {
-		               Vector4 transformedPoint = worldViewProjectionMatrix.TransformPoint(Vector4{v.position, 1});
-
-		               // TODO: Move this after the frustum culling
-		               transformedPoint.x = transformedPoint.x / transformedPoint.w;
-		               transformedPoint.y = transformedPoint.y / transformedPoint.w;
-		               transformedPoint.z = transformedPoint.z / transformedPoint.w;
-
-		               return PhongMeshDataVertexOut{
-			               .position = transformedPoint,
-			               .uv = v.uv,
-			               .normal = m_WorldMatrix.TransformVector(v.normal).Normalized(), // TODO: I dont think I need to normalize
-			               .tangent = m_WorldMatrix.TransformVector(v.tangent).Normalized(),
-			               .viewDirection = (camera.GetWorldPosition() - (m_WorldMatrix.TransformPoint(v.position))).Normalized()
-		               };
-	               });
+	m_ActiveCullMode = mode;
 }
+
+void PhongMesh::SetSamplelingMode(const SampleMethod shadingMode)
+{
+	m_SampleMode = shadingMode;
+}
+
