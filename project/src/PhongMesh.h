@@ -57,6 +57,8 @@ public:
                       const std::string& diffuseTextureFilePath, const std::string& normalMapTexture,
                       const std::string& glossTexture, const std::string& specularTexture);
     void SetWorldMatrix(Matrix<float> matrix) override;
+    void ToggleNormalMap();
+    void NextShadingMode();
 
 private:
     // -- SoftWare
@@ -64,10 +66,10 @@ private:
     std::vector<uint32_t> m_Indices;
     std::vector<PhongMeshDataVertexOut> m_VertexDataOut;
     std::vector<Triangle<PhongMeshDataVertexOut>> m_TrianglesOut;
-    bool m_UseNormalMaps{false};
+    bool m_UseNormalMaps{true};
     float m_DiffuseReflectance{7.0f};
     float m_Shininess{25.0f};
-    ShadingMode m_ShadingMode{ShadingMode::observed_area};
+    ShadingMode m_ShadingMode{ShadingMode::combined};
 
     void VertexStage(const std::vector<PhongMeshData>& vertices_in, std::vector<PhongMeshDataVertexOut>& vertices_out, const Camera& camera) const;
 
@@ -78,7 +80,6 @@ private:
     std::shared_ptr<Texture> m_GlossTexture{};
     std::shared_ptr<Texture> m_SpecularTexture{};
     
-
     // --- HardWare ---
     ID3D11Device* m_pDevice{};
     std::unique_ptr<ID3D11Buffer, callRelease<ID3D11Buffer>> m_pVertexBuffer;

@@ -11,6 +11,7 @@
 
 #include "ColorRGB.h"
 #include "CullMode.h"
+#include "Utils.h"
 
 struct Camera;
 
@@ -28,8 +29,11 @@ public:
     SoftwareRendererHelper(int width, int height, SDL_Surface* backBuffer);
 
     void ClearDepthBuffer();
-    float GetLastDepth() const;
+    [[nodiscard]] float GetLastDepth() const;
+    const std::vector<float>& GetDepthBuffer();
     void SetCullMode(CullMode mode);
+    void ToggleDrawDepthBuffer();
+    void ToggleDrawBoundingBox();
 
     template <typename VertexContainer, typename IndicesContainer, typename VertexType>
     void GetTriangles(IndicesContainer begin, const IndicesContainer end, const VertexContainer& vertices, std::vector<Triangle<VertexType>>& triangles)
@@ -90,6 +94,12 @@ public:
             {
                 for (int py{minY}; py < maxY; ++py)
                 {
+                    if (m_DrawBoundingBoxes)
+                    {
+                        reinterpret_cast<uint32_t*>(m_BackBuffer->pixels)[px + (py * m_Width)] = SDL_MapRGB(m_BackBuffer->format,255, 0,0);
+                        continue;
+                    }
+                    
                     Vector2 pixelLocation = {static_cast<float>(px) + 0.5f, static_cast<float>(py) + 0.5f};
 
                     float distV2 = Vector2::Cross(v1 - v0, pixelLocation - v0);
@@ -114,6 +124,16 @@ public:
                     {
                         m_DepthBuffer[px + (py * m_Width)] = depth;
                         m_LastDepth = depth;
+
+                        if (m_DrawDepthBuffer)
+                        {
+                            float remappedDepth = Utils::Remap01(depth, 0.9f, 1.0f);
+                            reinterpret_cast<uint32_t*>(m_BackBuffer->pixels)[px + (py * m_Width)] = SDL_MapRGB(m_BackBuffer->format,
+                                                               static_cast<uint8_t>(remappedDepth * 255),
+                                                               static_cast<uint8_t>(remappedDepth * 255),
+                                                               static_cast<uint8_t>(remappedDepth * 255));
+                            continue;
+                        }
 
     #if _DEBUG
                         if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_T])
@@ -188,6 +208,8 @@ private:
     int m_Height;
     float m_LastDepth{};
     CullMode m_CullMode{CullMode::back};
+    bool m_DrawDepthBuffer{false};
+    bool m_DrawBoundingBoxes{false};
 
     SDL_Surface* m_BackBuffer;
     std::vector<float> m_DepthBuffer{};

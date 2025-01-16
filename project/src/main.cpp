@@ -62,29 +62,54 @@ int main(int argc, char* args[])
 				isLooping = false;
 				break;
 			case SDL_KEYUP:
-				if (e.key.keysym.scancode == SDL_SCANCODE_F4)
-				{
-					pRenderer->ToggleSampleMode();
-				}
+				// SHARED
 				if (e.key.keysym.scancode == SDL_SCANCODE_F1)
 				{
 					renderSoftWare = !renderSoftWare;
-				}
-				if (e.key.keysym.scancode == SDL_SCANCODE_F10)
-				{
-					pRenderer->ToggleSceneBackGround();
-				}
-				if (e.key.keysym.scancode == SDL_SCANCODE_F9)
-				{
-					pRenderer->NextCullMode();
 				}
 				if (e.key.keysym.scancode == SDL_SCANCODE_F2)
 				{
 					pRenderer->ToggleRotation();
 				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F9)
+				{
+					pRenderer->NextCullMode();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F10)
+				{
+					pRenderer->ToggleSceneBackGround();
+				}
 				if (e.key.keysym.scancode == SDL_SCANCODE_F11)
 				{
 					printFps = !printFps;
+				}
+
+				// HARDWARE
+				if (e.key.keysym.scancode == SDL_SCANCODE_F3)
+				{
+					
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F4)
+				{
+					pRenderer->ToggleSampleMode();
+				}
+
+				// SOFTWARE
+				if (e.key.keysym.scancode == SDL_SCANCODE_F5)
+				{
+					pRenderer->NextShadingMode();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F6)
+				{
+					pRenderer->ToggleNormalMap();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F7)
+				{
+					pRenderer->ToggleDepthBuffer();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F8)
+				{
+					pRenderer->ToggleBoundingBoxDraw();
 				}
 				break;
 			default: ;

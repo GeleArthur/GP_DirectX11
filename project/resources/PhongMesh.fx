@@ -12,6 +12,7 @@ struct VS_OUTPUT
     float2 uv : TEXCOORD;
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
+
     float3 viewDirection : VIEWDIRECTION;
 };
 
@@ -19,6 +20,10 @@ float4x4 gWorldViewProj : WorldViewProjection;
 float4x4 gWorldMatrix : WorldMatrix;
 
 Texture2D gDiffuseMap : DiffuseMap;
+Texture2D gNormalMap : NormalMap;
+Texture2D gGlossMap : GlossMap;
+Texture2D gSpecularMap : SpecularMap;
+
 float3 gWorldPosition: WorldPosition;
 float3 gLightDirection: LightDirection;
 

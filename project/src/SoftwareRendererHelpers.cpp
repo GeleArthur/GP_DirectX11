@@ -23,7 +23,22 @@ float SoftwareRendererHelper::GetLastDepth() const
     return m_LastDepth;
 }
 
+const std::vector<float>& SoftwareRendererHelper::GetDepthBuffer()
+{
+    return m_DepthBuffer;
+}
+
 void SoftwareRendererHelper::SetCullMode(CullMode mode)
 {
     m_CullMode = mode;
+}
+
+void SoftwareRendererHelper::ToggleDrawDepthBuffer()
+{
+    m_DrawDepthBuffer = !m_DrawDepthBuffer;
+}
+
+void SoftwareRendererHelper::ToggleDrawBoundingBox()
+{
+    m_DrawBoundingBoxes = !m_DrawBoundingBoxes;
 }

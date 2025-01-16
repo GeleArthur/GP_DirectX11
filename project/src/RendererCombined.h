@@ -34,10 +34,15 @@ public:
 	void RenderSoftware() const;
 	void ToggleSampleMode();
 	void LoadScene();
+	
 	void ToggleSceneBackGround();
 	void NextCullMode();
 	void ToggleRotation();
-	
+	void ToggleDepthBuffer() const;
+	void ToggleBoundingBoxDraw() const;
+	void ToggleNormalMap() const;
+	void NextShadingMode() const;
+
 private:
 	HRESULT InitializeDirectX();
 	void InitSoftware();
@@ -52,12 +57,12 @@ private:
 
 	bool m_UseSceneBackgroundColor{false};
 	CullMode m_ActiveCullMode{CullMode::back};
-	
 	// --------- SOFTWARE ---------
 
 	std::unique_ptr<SoftwareRendererHelper> m_SoftwareHelper;
 	SDL_Surface* m_pFrontBuffer{};
 	SDL_Surface* m_pBackBuffer{};
+	bool m_DrawDepthBuffer{};
 
 	// --------- DirectX ---------
 	ID3D11Device* m_pDevice{};

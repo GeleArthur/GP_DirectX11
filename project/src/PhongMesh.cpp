@@ -151,7 +151,7 @@ void PhongMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
 				Vector<4,float>::Zero
 			};
 		    
-			Vector3 sampledNormal = Vector3{m_NormalTexture->Sample(vertexIn.uv)};
+			Vector3 sampledNormal = Vector3{m_NormalTexture->Sample(vertexIn.uv, true)};
 			normal = Vector3{(2.0f * sampledNormal.x) - 1.0f, (2.0f * sampledNormal.y) - 1.0f, 2.0f * sampledNormal.z - 1.0f};
 			normal = tangentSpaceAxis.TransformVector(normal);
 		}
@@ -246,6 +246,30 @@ void PhongMesh::LoadMeshData(std::vector<PhongMeshData>&& vertexData, std::vecto
 void PhongMesh::SetWorldMatrix(const Matrix<float> matrix)
 {
 	m_WorldMatrix = matrix;
+}
+
+void PhongMesh::ToggleNormalMap()
+{
+	m_UseNormalMaps = !m_UseNormalMaps;
+}
+
+void PhongMesh::NextShadingMode()
+{
+	switch (m_ShadingMode)
+	{
+	case ShadingMode::observed_area:
+		m_ShadingMode = ShadingMode::diffuse;
+		break;
+	case ShadingMode::diffuse:
+		m_ShadingMode = ShadingMode::specular;
+		break;
+	case ShadingMode::specular:
+		m_ShadingMode = ShadingMode::combined;
+		break;
+	case ShadingMode::combined:
+		m_ShadingMode = ShadingMode::observed_area;
+		break;
+	}
 }
 
 void PhongMesh::VertexStage(const std::vector<PhongMeshData>& vertices_in, std::vector<PhongMeshDataVertexOut>& vertices_out, const Camera& camera) const

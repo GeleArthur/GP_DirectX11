@@ -221,6 +221,7 @@ void RendererCombined::LoadScene()
 
 void RendererCombined::ToggleSceneBackGround()
 {
+	std::cout << "Toggle UniformBackGround\n";
 	m_UseSceneBackgroundColor = !m_UseSceneBackgroundColor;
 }
 
@@ -242,12 +243,69 @@ void RendererCombined::NextCullMode()
 
 	
 	std::cout << "CullMode: " << magic_enum::enum_name(m_ActiveCullMode) << '\n';
-	
 }
 
 void RendererCombined::ToggleRotation()
 {
+	std::cout << "Toggle Rotation\n";
+
 	m_ActiveScene.ToggleRotation();
+}
+
+void RendererCombined::ToggleDepthBuffer() const
+{
+	std::cout << "Toggle DepthBuffer\n";
+
+	m_SoftwareHelper->ToggleDrawDepthBuffer();
+}
+
+void RendererCombined::ToggleBoundingBoxDraw() const
+{
+	std::cout << "Toggle BoundingBox\n";
+	m_SoftwareHelper->ToggleDrawBoundingBox();
+}
+
+void RendererCombined::ToggleNormalMap() const
+{
+	std::cout << "Toggle normalMap\n";
+	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
+	{
+		if (auto const pointer = dynamic_cast<PhongMesh*>(mesh.get()); pointer != nullptr)
+		{
+			pointer->ToggleNormalMap();
+		}
+	}
+}
+
+void RendererCombined::NextShadingMode() const
+{
+	std::cout << "ShadingMode Change\n";
+	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
+	{
+		if (auto const pointer = dynamic_cast<PhongMesh*>(mesh.get()); pointer != nullptr)
+		{
+			pointer->NextShadingMode();
+		}
+	}
+}
+
+void RendererCombined::ToggleSampleMode()
+{
+	switch (m_CurrentSampleMode)
+	{
+	case TextureSampleMethod::point:
+		m_CurrentSampleMode = TextureSampleMethod::linear;
+		break;
+	case TextureSampleMethod::linear:
+		m_CurrentSampleMode = TextureSampleMethod::anisotropic;
+		break;
+	case TextureSampleMethod::anisotropic:
+		m_CurrentSampleMode = TextureSampleMethod::point;
+		break;
+	}
+
+	std::cout << "Using: " << magic_enum::enum_name(m_CurrentSampleMode) << std::endl;
+
 }
 
 void RendererCombined::Update(const Timer& pTimer)
@@ -316,25 +374,6 @@ void RendererCombined::RenderSoftware() const
 	SDL_UnlockSurface(m_pBackBuffer);
 	SDL_BlitSurface(m_pBackBuffer, nullptr, m_pFrontBuffer, nullptr);
 	SDL_UpdateWindowSurface(m_pWindow);
-}
-
-void RendererCombined::ToggleSampleMode()
-{
-	switch (m_CurrentSampleMode)
-	{
-	case TextureSampleMethod::point:
-		m_CurrentSampleMode = TextureSampleMethod::linear;
-		break;
-	case TextureSampleMethod::linear:
-		m_CurrentSampleMode = TextureSampleMethod::anisotropic;
-		break;
-	case TextureSampleMethod::anisotropic:
-		m_CurrentSampleMode = TextureSampleMethod::point;
-		break;
-	}
-
-	std::cout << "Using: " << magic_enum::enum_name(m_CurrentSampleMode) << std::endl;
-
 }
 
 
