@@ -88,6 +88,11 @@ private:
     std::unique_ptr<ID3D11RasterizerState, callRelease<ID3D11RasterizerState>> m_RasterizerStateCullFront;
     std::unique_ptr<ID3D11RasterizerState, callRelease<ID3D11RasterizerState>> m_RasterizerStateCullBack;
 
+    std::unique_ptr<ID3D11SamplerState, callRelease<ID3D11SamplerState>> m_pAnisotropicMode;
+    std::unique_ptr<ID3D11SamplerState, callRelease<ID3D11SamplerState>> m_pPointMode;
+    std::unique_ptr<ID3D11SamplerState, callRelease<ID3D11SamplerState>> m_pLinearMode;
+
+
     // Hold the references in this instances
     std::shared_ptr<ID3D11InputLayout> m_InputLayout;
     std::shared_ptr<ID3DX11Effect> m_Effect;

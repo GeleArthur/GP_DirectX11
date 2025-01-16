@@ -83,10 +83,10 @@ PhongMesh::PhongMesh(ID3D11Device* pDevice): m_pDevice(pDevice)
 
 	D3D11_RASTERIZER_DESC rasterizerConfig{};
 	rasterizerConfig.FillMode = D3D11_FILL_SOLID;
-	rasterizerConfig.CullMode = D3D11_CULL_NONE;
 	rasterizerConfig.FrontCounterClockwise = false;
 	rasterizerConfig.DepthClipEnable = true;
 
+	rasterizerConfig.CullMode = D3D11_CULL_NONE;
 	ID3D11RasterizerState* rasterizerState;
 	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &rasterizerState));
 	m_RasterizerStateCullNone = std::unique_ptr<ID3D11RasterizerState, callRelease<ID3D11RasterizerState>>(rasterizerState);
@@ -98,6 +98,37 @@ PhongMesh::PhongMesh(ID3D11Device* pDevice): m_pDevice(pDevice)
 	rasterizerConfig.CullMode = D3D11_CULL_BACK;
 	CallDirectX(m_pDevice->CreateRasterizerState(&rasterizerConfig, &rasterizerState));
 	m_RasterizerStateCullBack = std::unique_ptr<ID3D11RasterizerState, callRelease<ID3D11RasterizerState>>(rasterizerState);
+
+
+	D3D11_SAMPLER_DESC config{};
+	config.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	config.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	config.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	config.MipLODBias = 0.0f;
+	config.MaxAnisotropy = 16;
+	config.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	config.BorderColor[0] = 0.0f; 
+	config.BorderColor[1] = 0.0f;
+	config.BorderColor[2] = 0.0f;
+	config.BorderColor[3] = 0.0f;
+	config.MinLOD = 0.0f;
+	config.MaxLOD = D3D11_FLOAT32_MAX;
+
+	ID3D11SamplerState* samplerState;
+
+	
+	config.Filter = D3D11_FILTER_ANISOTROPIC;
+	CallDirectX(m_pDevice->CreateSamplerState(&config, &samplerState));
+	m_pAnisotropicMode = std::unique_ptr<ID3D11SamplerState, callRelease<ID3D11SamplerState>>(samplerState);
+
+	config.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	CallDirectX(m_pDevice->CreateSamplerState(&config, &samplerState));
+	m_pPointMode = std::unique_ptr<ID3D11SamplerState, callRelease<ID3D11SamplerState>>(samplerState);
+
+	config.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	CallDirectX(m_pDevice->CreateSamplerState(&config, &samplerState));
+	m_pLinearMode = std::unique_ptr<ID3D11SamplerState, callRelease<ID3D11SamplerState>>(samplerState);
+	
 }
 
 void PhongMesh::LoadMeshData(std::vector<PhongMeshData>&& vertexData, std::vector<uint32_t>&& indices,
@@ -179,6 +210,20 @@ void PhongMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& 
 	ID3DX11EffectScalarVariable* diffuseReflectance = m_Effect->GetVariableByName("gDiffuseReflectance")->AsScalar();
 	CallDirectX(diffuseReflectance->SetFloat(m_DiffuseReflectance));
 
+	ID3DX11EffectSamplerVariable* sampleMode = m_Effect->GetVariableByName("sampleMode")->AsSampler();
+	switch (m_SampleMode)
+	{
+	case SampleMethod::point:
+		CallDirectX(sampleMode->SetSampler(0, m_pPointMode.get()));
+		break;
+	case SampleMethod::linear:
+		CallDirectX(sampleMode->SetSampler(0, m_pLinearMode.get()));
+		break;
+	case SampleMethod::anisotropic:
+		CallDirectX(sampleMode->SetSampler(0, m_pAnisotropicMode.get()));
+		break;
+	}
+	
 
 	switch (m_ActiveCullMode)
 	{
