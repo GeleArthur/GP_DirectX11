@@ -19,14 +19,12 @@ set(SOURCES
         "src/PhongMesh.cpp"
         "src/FireFX.h"
         "src/FireFX.cpp"
-
         "src/Camera.h"
         "src/Camera.cpp"
         "src/Texture.h"
         "src/Texture.cpp"
         "src/TextureManager.h"
         "src/TextureManager.cpp"
-        "src/magic_enum.hpp"
         "src/BaseMeshEffect.h"
         "src/UnlitMesh.h"
         "src/UnlitMesh.cpp"
@@ -35,46 +33,32 @@ set(SOURCES
         "src/Scene.h"
         "src/DirectXUtils.h"
         "src/CullMode.h"
-        "src/tiny_obj_loader.h"
-        
-        )
 
-# Create the executable
+        "src/magic_enum.hpp"
+        "src/tiny_obj_loader.h"
+)
+
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build" FORCE)
 endif()
 
-# only needed if header files are not in same directory as source files
-# target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
 target_link_libraries(${PROJECT_NAME} PRIVATE d3d11.lib dxgi.lib)
 
-
-# Copy resources to output folder
-set(RESOURCES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
-file(GLOB_RECURSE RESOURCE_FILES
-        "${RESOURCES_SOURCE_DIR}/*"
-)
-# set(RESOURCES_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/resources/")
-# file(MAKE_DIRECTORY ${RESOURCES_OUT_DIR})
-# foreach(RESOURCE ${RESOURCE_FILES})
-#     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#     COMMAND ${CMAKE_COMMAND} -E copy ${RESOURCE}
-#     ${RESOURCES_OUT_DIR})
-# endforeach(RESOURCE)
+file(GLOB_RECURSE RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
+add_custom_target(Resources ALL SOURCES ${RESOURCE_FILES})
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
-        "${CMAKE_CURRENT_SOURCE_DIR}/Resources"
-        "${CMAKE_CURRENT_BINARY_DIR}/Resources"
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/resources"
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
 
-add_custom_target(Resources ALL SOURCES ${RESOURCE_FILES})
+# SDL IMPORT
 
-# Simple Directmedia Layer
 set(SDL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs/SDL2-2.30.7")
 add_library(SDL STATIC IMPORTED)
 set_target_properties(SDL PROPERTIES
@@ -94,7 +78,6 @@ foreach (DLL ${DLL_FILES})
             $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endforeach (DLL)
 
-# Simple Directmedia Layer Image
 set(SDL_IMAGE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs/SDL2_image-2.8.2")
 add_library(SDL_IMAGE STATIC IMPORTED)
 set_target_properties(SDL_IMAGE PROPERTIES
@@ -114,6 +97,9 @@ foreach (DLL ${DLL_FILES})
             $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endforeach (DLL)
 
+
+
+
 # DirectX Effects
 set(FX_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs/dx11effects")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -127,19 +113,6 @@ set_target_properties(FX PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${FX_DIR}/include"
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE FX)
-
-# file(GLOB_RECURSE DLL_FILES
-#    "${FX_DIR}/lib/x64/*.dll"
-#    "${FX_DIR}/lib/x64/*.manifest"
-# )
-
-# foreach(DLL ${DLL_FILES})
-#    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#        COMMAND ${CMAKE_COMMAND} -E copy ${DLL}
-#        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-# endforeach(DLL)
-
-
 
 # Visual Leak Detector
 if (WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)

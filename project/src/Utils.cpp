@@ -32,7 +32,7 @@ Utils::ParsedObj Utils::ParseOBJ(const std::string& filename, bool flipAxisAndWi
         out.positions.reserve(shape.mesh.indices.size());
         out.uv.reserve(shape.mesh.indices.size());
         out.normal.reserve(shape.mesh.indices.size());
-        for (size_t j = 0; j < shape.mesh.indices.size(); ++j)
+        for (uint32_t j = 0u; j < shape.mesh.indices.size(); ++j)
         {
             out.indices.push_back(j);
             const auto index = shape.mesh.indices[j];

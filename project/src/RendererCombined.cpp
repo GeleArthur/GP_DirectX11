@@ -204,7 +204,7 @@ void RendererCombined::LoadScene()
 	// m_ActiveScene.AddMesh(std::move(mesh));
 
 
-	m_ActiveScene.AddLight({0.577f, -0.577f, 0.577});
+	m_ActiveScene.AddLight({0.577f, -0.577f, 0.577f});
 }
 
 void RendererCombined::ToggleSceneBackGround()
@@ -364,7 +364,7 @@ void RendererCombined::RenderDirectX() const
 	}
 	
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, backgroundColor);
-	m_pDeviceContext->ClearDepthStencilView(m_pDepthStecilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0.0f);
+	m_pDeviceContext->ClearDepthStencilView(m_pDepthStecilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0u);
 	
 	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
 	{

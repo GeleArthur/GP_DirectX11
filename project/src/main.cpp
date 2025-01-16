@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#ifndef NDEBUG
+#ifdef _DEBUG
 #include "vld.h"
 #endif
 
@@ -147,12 +147,13 @@ int main(int argc, char* args[])
 	pRenderer.reset();
 
 #ifdef _DEBUG
-	OutputDebugString("REPORT LEAKS\n");
+	OutputDebugStringA("REPORT LEAKS\n");
 	d3d11Debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
-	OutputDebugString("DONE LEAKS\n");
+	OutputDebugStringA("DONE LEAKS\n");
 #endif
 
-	d3d11Debug->Release();
+	if (d3d11Debug)
+		d3d11Debug->Release();
 
 	ShutDown(pWindow);
 	return 0;
