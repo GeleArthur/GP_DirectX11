@@ -48,7 +48,7 @@ PhongMesh::PhongMesh(ID3D11Device* pDevice): m_pDevice(pDevice)
     }
     else
     {
-        static constexpr uint32_t numElements{ 5 };
+        static constexpr uint32_t numElements{ 4 };
         D3D11_INPUT_ELEMENT_DESC vertexDesc[numElements]{};
 
         vertexDesc[0].SemanticName = "POSITION";
@@ -70,12 +70,7 @@ PhongMesh::PhongMesh(ID3D11Device* pDevice): m_pDevice(pDevice)
     	vertexDesc[3].Format = DXGI_FORMAT_R32G32B32_FLOAT;
     	vertexDesc[3].AlignedByteOffset = 32;
     	vertexDesc[3].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-
-    	vertexDesc[4].SemanticName = "VIEWDIRECTION";
-    	vertexDesc[4].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-    	vertexDesc[4].AlignedByteOffset = 44;
-    	vertexDesc[4].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-
+    	
         D3DX11_PASS_DESC passDesc{};
         CallDirectX(m_Technique->GetPassByIndex(0)->GetDesc(&passDesc));
 
@@ -92,13 +87,17 @@ PhongMesh::~PhongMesh() = default;
 void PhongMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& scene) // Camera should not be here
 {
 	ID3DX11EffectShaderResourceVariable* diffuseMap = m_Effect->GetVariableByName("gDiffuseMap")->AsShaderResource();
-	diffuseMap->SetResource(m_DiffuseTexture->D3D11GetTexture2D());
+	CallDirectX(diffuseMap->SetResource(m_DiffuseTexture->D3D11GetTexture2D()));
 	
 	ID3DX11EffectMatrixVariable* projectionMatrix = m_Effect->GetVariableByName("gWorldViewProj")->AsMatrix();
-	if (!projectionMatrix->IsValid())
-		return;
+	CallDirectX(projectionMatrix->SetMatrix((m_WorldMatrix * scene.GetCamera().GetViewProjectionMatrix()).GetFloatArray()));
 
-	projectionMatrix->SetMatrix((m_WorldMatrix * scene.GetCamera().GetViewProjectionMatrix()).GetFloatArray());
+	ID3DX11EffectVectorVariable* worldPostion = m_Effect->GetVariableByName("gWorldPosition")->AsVector();
+	
+	Vector4 convertedWorld = Vector4{scene.GetCamera().GetWorldPosition(), 0.0f};
+	CallDirectX(worldPostion->SetFloatVector(reinterpret_cast<float*>(&convertedWorld)));
+	
+	
 	
 	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pDeviceContext->IASetInputLayout(m_InputLayout.get()); // Source of bad
@@ -263,7 +262,7 @@ void PhongMesh::VertexStage(const std::vector<PhongMeshData>& vertices_in, std::
 		               return PhongMeshDataVertexOut{
 			               .position = transformedPoint,
 			               .uv = v.uv,
-			               .normal = m_WorldMatrix.TransformVector(v.normal).Normalized(),
+			               .normal = m_WorldMatrix.TransformVector(v.normal).Normalized(), // TODO: I dont think I need to normalize
 			               .tangent = m_WorldMatrix.TransformVector(v.tangent).Normalized(),
 			               .viewDirection = (camera.GetWorldPosition() - (m_WorldMatrix.TransformPoint(v.position))).Normalized()
 		               };

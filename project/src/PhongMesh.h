@@ -64,7 +64,7 @@ private:
     std::vector<uint32_t> m_Indices;
     std::vector<PhongMeshDataVertexOut> m_VertexDataOut;
     std::vector<Triangle<PhongMeshDataVertexOut>> m_TrianglesOut;
-    bool m_UseNormalMaps;
+    bool m_UseNormalMaps{true};
     float m_DiffuseReflectance{7.0f};
     float m_Shininess{25.0f};
     ShadingMode m_ShadingMode{ShadingMode::combined};

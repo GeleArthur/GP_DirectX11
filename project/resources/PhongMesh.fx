@@ -1,17 +1,23 @@
 struct VS_INPUT
 {
-    float3 Position: POSITION;
-    float2 Uv : TEXCOORD;
+    float3 position: POSITION;
+    float2 uv : TEXCOORD0; // Does order matter with the attributes?????
+    float3 normal : NORMAL0;
+    float3 tangent : TANGENT0;
 };
 
 struct VS_OUTPUT
 {
-    float4 Position : SV_POSITION;
-    float2 Uv : TEXCOORD;
+    float4 position : SV_POSITION;
+    float2 uv : TEXCOORD;
+    float3 normal : NORMAL;
+    float3 tangent : TANGENT;
+    float3 viewDirection : VIEWDIRECTION;
 };
 
 float4x4 gWorldViewProj : WorldViewProjection;
 Texture2D gDiffuseMap : DiffuseMap;
+float3 gWorldPosition: WorldPosition;
 
 SamplerState samplePoint
 {
@@ -24,15 +30,19 @@ SamplerState samplePoint
 VS_OUTPUT VS(VS_INPUT input)
 {
     VS_OUTPUT output = (VS_OUTPUT)0;
-    output.Position = mul(float4(input.Position, 1.f), gWorldViewProj);
-    output.Uv = input.Uv;
+    output.position = mul(float4(input.position, 1.f), gWorldViewProj);
+    output.uv = input.uv;
+    output.normal = mul(float4(input.normal, 0.f), gWorldViewProj).xyz;
+    output.tangent = mul(float4(input.tangent, 0.f), gWorldViewProj).xyz;
+    output.viewDirection = normalize(gWorldPosition - output.position.xyz);
+    
     return output;
 };
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
     //return float4(input.Uv.x, input.Uv.y, 0.0, 1.0);
-    float3 rgbColor = gDiffuseMap.Sample(samplePoint, input.Uv);
+    float3 rgbColor = gDiffuseMap.Sample(samplePoint, input.uv).xyz;
     return float4(rgbColor, 1.0f);
 };
 
