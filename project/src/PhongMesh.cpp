@@ -158,12 +158,12 @@ void PhongMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
 			const Vector3 realNormal = vertexIn.normal.Normalized();
 			const Vector3 realTangent = vertexIn.tangent.Normalized();
 			// Do this in the vertex stage?
-			const Vector3 binormal = Vector3::Cross(realNormal, realTangent);
+			const Vector3 binormal = Vector3::Cross(realNormal, realTangent).Normalized();
 			Matrix tangentSpaceAxis{
-				Vector<4, float>{realTangent, 0},
-				Vector<4, float>{binormal, 0},
-				Vector<4, float>{realNormal, 0},
-				Vector<4,float>::Zero
+				Vector4{realTangent, 0},
+				Vector4{binormal, 0},
+				Vector4{realNormal, 0},
+				Vector4::Zero
 			};
 		    
 			Vector3 sampledNormal = Vector3{m_NormalTexture->Sample(vertexIn.uv, true)};
@@ -172,10 +172,12 @@ void PhongMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
 		}
 		else
 		{
-			normal = vertexIn.normal.Normalized();
+			normal = vertexIn.normal;
 		}
 
-		// return ColorRGB{normal.x, normal.y, normal.z};
+    	normal = normal.Normalized();
+
+    	// return ColorRGB{normal.x,normal.y,normal.z};
     	
 		const Vector3 lightDirection = scene.GetLights().at(0).Normalized(); // TODO: Multilight
 		const ColorRGB albedoTexture = m_DiffuseTexture->Sample(vertexIn.uv);

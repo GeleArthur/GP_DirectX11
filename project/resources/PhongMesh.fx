@@ -14,6 +14,7 @@ struct VS_OUTPUT
     float2 uv : TEXCOORD;
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
+    float3 binormal : BINORMAL;
 
     float3 viewDirection : VIEWDIRECTION;
 };
@@ -54,6 +55,7 @@ VS_OUTPUT VS(VS_INPUT input)
     output.uv = input.uv;
     output.normal = mul(input.normal, (float3x3)gWorldMatrix);
     output.tangent = mul(input.tangent, (float3x3)gWorldMatrix);
+    output.binormal = cross(output.normal, output.tangent);
     output.viewDirection = normalize((gWorldPosition - mul(float4(input.position, 1.f), gWorldMatrix)).xyz);
     
     return output;
@@ -63,26 +65,30 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
 {
     float3 finalColor = 0;
 
-    float3 normalMap = (gNormalMap.Sample(samplePoint, input.uv).rgb * 2.0) - 1.0;
-    float3 binormal = cross(normalize(input.normal), normalize(input.tangent)); // This can be moved to vertex
+    float3 normalizeNormal = normalize(input.normal);
+    float3 normalizeTangent = normalize(input.tangent);
+    float3 normalizeBinormal = normalize(input.binormal);
+    float3x3 tangentSpaceAxis = {normalizeTangent, normalizeBinormal, normalizeNormal};
+    
+    float3 normalMap = gNormalMap.Sample(samplePoint, input.uv).rgb; // Incress range
+    normalMap = (2.0f * normalMap) - 1.0f;
+    float3 normal = mul(normalMap, tangentSpaceAxis);
 
-    float3 newNormal = (normalMap.x * input.normal) + (normalMap.y * input.tangent) + (normalMap.z * binormal);
-
-    // finalColor = normalize(input.normal);
+    // finalColor = normal;
 
 
 	// const Vector3 lightDirection = scene.GetLights().at(0).Normalized(); // TODO: Multilight
     float3 albedoTexture = gDiffuseMap.Sample(samplePoint, input.uv).rgb;
 
     // lambert
-    float observableArea = max(0.0f, dot(-gLightDirection, normalize(input.normal)));
+    float observableArea = max(0.0f, dot(-gLightDirection, normalize(normal)));
     float3 lambert = (gDiffuseReflectance * albedoTexture) / PI;
 
     // Phong
     float specularReflectance = gSpecularMap.Sample(samplePoint, input.uv).r;
     float gloss = gGlossMap.Sample(samplePoint, input.uv).r * gShininess;
 
-    float3 reflect1 = reflect(-gLightDirection, normalize(input.normal));
+    float3 reflect1 = reflect(-gLightDirection, normalize(normal));
     float cosAngle = max(0.0f, dot(reflect1, -input.viewDirection));
 
     float phong = specularReflectance * pow(cosAngle, gloss);

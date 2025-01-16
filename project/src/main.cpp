@@ -65,6 +65,7 @@ int main(int argc, char* args[])
 				// SHARED
 				if (e.key.keysym.scancode == SDL_SCANCODE_F1)
 				{
+					std::cout << "Toggle RenderMode\n";
 					renderSoftWare = !renderSoftWare;
 				}
 				if (e.key.keysym.scancode == SDL_SCANCODE_F2)

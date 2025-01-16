@@ -141,7 +141,7 @@ public:
                             int mousex;
                             int mousey;
                             SDL_GetMouseState(&mousex, &mousey);
-                            if (px == 972 && py == 609)
+                            if (px == 872 && py == 531)
                             {
                                 __debugbreak();
                             }
@@ -161,9 +161,9 @@ public:
                         finalColor.MaxToOne();
 
                         reinterpret_cast<uint32_t*>(m_BackBuffer->pixels)[px + (py * m_Width)] = SDL_MapRGB(m_BackBuffer->format,
-                                                           static_cast<uint8_t>(finalColor.r * 255),
-                                                           static_cast<uint8_t>(finalColor.g * 255),
-                                                           static_cast<uint8_t>(finalColor.b * 255));
+                                                           static_cast<uint8_t>(std::clamp(finalColor.r, 0.f, 1.0f) * 255),
+                                                           static_cast<uint8_t>(std::clamp(finalColor.g, 0.0f, 1.0f) * 255),
+                                                           static_cast<uint8_t>(std::clamp(finalColor.b, 0.0f, 1.0f) * 255));
                     }
                 }
             }
