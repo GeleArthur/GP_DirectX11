@@ -11,6 +11,11 @@
 
 extern ID3D11Debug* d3d11Debug;
 
+constexpr static auto MAGENTA = "\033[35m";
+constexpr static auto YELLOW = "\033[33m";
+constexpr static auto GREEN = "\033[32m";
+constexpr static auto RESET = "\033[0m";
+
 RendererCombined::RendererCombined(SDL_Window* pWindow) :
 	m_pWindow(pWindow)
 {
@@ -211,8 +216,12 @@ void RendererCombined::LoadScene()
 
 void RendererCombined::ToggleSceneBackGround()
 {
-	std::cout << "Toggle UniformBackGround\n";
 	m_UseSceneBackgroundColor = !m_UseSceneBackgroundColor;
+
+	std::cout << YELLOW << "**(SHARED) Uniform ClearColor";
+	if (m_UseSceneBackgroundColor) std::cout << "ON";
+	else std::cout << "OFF";
+	std::cout << '\n' << RESET;
 }
 
 void RendererCombined::NextCullMode()
@@ -235,41 +244,53 @@ void RendererCombined::NextCullMode()
 	{
 		if (auto const pointer = dynamic_cast<PhongMesh*>(mesh.get()); pointer != nullptr)
 		{
-			pointer->SetCullMode(m_ActiveCullMode);
+			pointer->CullMode = m_ActiveCullMode;
 		}
 	}
-	
-	std::cout << "CullMode: " << magic_enum::enum_name(m_ActiveCullMode) << '\n';
+
+	std::cout << YELLOW << "**(SHARED) CullMode = " << magic_enum::enum_name(m_ActiveCullMode) << '\n' << RESET;
 }
 
 void RendererCombined::ToggleRotation()
 {
-	std::cout << "Toggle Rotation\n";
-
 	m_ActiveScene.ToggleRotation();
 }
 
 void RendererCombined::ToggleDepthBuffer() const
 {
-	std::cout << "Toggle DepthBuffer\n";
+	m_SoftwareHelper->m_DrawDepthBuffer = !m_SoftwareHelper->m_DrawDepthBuffer;
 
-	m_SoftwareHelper->ToggleDrawDepthBuffer();
+	std::cout << MAGENTA << "**(SOFTWARE) NormalMap ";
+
+	if (m_SoftwareHelper->m_DrawDepthBuffer) std::cout << "ON";
+	else std::cout << "OFF";
+	std::cout << '\n' << RESET;
 }
 
 void RendererCombined::ToggleBoundingBoxDraw() const
 {
-	std::cout << "Toggle BoundingBox\n";
-	m_SoftwareHelper->ToggleDrawBoundingBox();
+	m_SoftwareHelper->m_DrawBoundingBoxes = !m_SoftwareHelper->m_DrawBoundingBoxes;
+
+	std::cout << MAGENTA << "**(SOFTWARE)BoundingBox Visualization ";
+	if (m_SoftwareHelper->m_DrawBoundingBoxes) std::cout << "ON";
+	else std::cout << "OFF";
+	std::cout << '\n' << RESET;
 }
 
-void RendererCombined::ToggleNormalMap() const
+void RendererCombined::ToggleNormalMap()
 {
-	std::cout << "Toggle normalMap\n";
+	m_UseNormalMap = !m_UseNormalMap;
+
+	std::cout << MAGENTA << "**(SOFTWARE)NormalMap ";
+	if (m_UseNormalMap) std::cout << "ON";
+	else std::cout << "OFF";
+	std::cout << '\n' << RESET;
+
 	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
 	{
 		if (auto const pointer = dynamic_cast<PhongMesh*>(mesh.get()); pointer != nullptr)
 		{
-			pointer->ToggleNormalMap();
+			pointer->UseNormalMaps = m_UseNormalMap;
 		}
 	}
 }
@@ -292,26 +313,34 @@ void RendererCombined::NextShadingMode()
 		break;
 	}
 	
-	std::cout << "ShadingMode: " << magic_enum::enum_name(m_ShadingMode) << '\n';
 	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
 	{
 		if (auto const pointer = dynamic_cast<PhongMesh*>(mesh.get()); pointer != nullptr)
 		{
-			pointer->SetShadingMode(m_ShadingMode);
+			pointer->ShadingMode = m_ShadingMode;
 		}
 	}
+
+	std::cout << MAGENTA << "**(SOFTWARE) Shading Mode = " << magic_enum::enum_name(m_ShadingMode) << '\n' << RESET;
+
 }
 
 void RendererCombined::DisableAllFireFx() const
 {
+	bool lastMode{};
 	for (const std::unique_ptr<BaseMeshEffect>& mesh : m_ActiveScene.GetAllMeshes())
 	{
 		if (auto const pointer = dynamic_cast<FireFX*>(mesh.get()); pointer != nullptr)
 		{
-			pointer->ToggleEnabled();
+			pointer->m_IsEnabled = !pointer->m_IsEnabled;
+			lastMode = pointer->m_IsEnabled;
 		}
 	}
-	std::cout << "Toggle FireFX\n";
+
+	std::cout << YELLOW << "**(SHARED) Toggle FireFX = ";
+	if (lastMode) std::cout << "ON";
+	else std::cout << "OFF";
+	std::cout << '\n' << RESET;
 }
 
 void RendererCombined::ToggleSampleMode()
@@ -333,12 +362,11 @@ void RendererCombined::ToggleSampleMode()
 	{
 		if (auto const pointer = dynamic_cast<PhongMesh*>(mesh.get()); pointer != nullptr)
 		{
-			pointer->SetSamplelingMode(m_SampleMode);
+			pointer->SampleMode = m_SampleMode;
 		}
 	}
 
-	std::cout << "SampleMode: " << magic_enum::enum_name(m_SampleMode) << '\n';
-
+	std::cout << GREEN << "**(HARDWARE) SampleMode = " << magic_enum::enum_name(m_SampleMode) << '\n' << RESET;
 }
 
 void RendererCombined::Update(const Timer& pTimer)

@@ -21,8 +21,6 @@ struct FireFXDataVertexOut
     Vector4 position;
     Vector2 uv;
 
-    // Wonder if there is a better way.
-    // TODO: Template these
     auto AsTuple() const{return std::make_tuple(position, uv);}
     static FireFXDataVertexOut FromTuple(const decltype(std::make_tuple(position, uv))& in)
     {
@@ -47,13 +45,14 @@ public:
     void ToggleEnabled();
     bool IsEnabled() override;
 
+    bool m_IsEnabled{ true };
+
 private:
     // -- SoftWare
     std::vector<FireFXData> m_VertexData;
     std::vector<uint32_t> m_Indices;
     std::vector<FireFXDataVertexOut> m_VertexDataOut;
     std::vector<Triangle<FireFXDataVertexOut>> m_TrianglesOut;
-    bool m_IsEnabled{true};
 
     void VertexStage(const std::vector<FireFXData>& vertices_in, std::vector<FireFXDataVertexOut>& vertices_out, const Camera& camera) const;
 

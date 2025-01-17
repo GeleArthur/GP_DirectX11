@@ -205,13 +205,13 @@ void PhongMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& 
 	CallDirectX(lightDirection->SetFloatVector(Vector4{scene.GetLights()[0], 0.0f}.GetFloatArray()));
 
 	ID3DX11EffectScalarVariable* shininess = m_Effect->GetVariableByName("gShininess")->AsScalar();
-	CallDirectX(shininess->SetFloat(m_Shininess));
+	CallDirectX(shininess->SetFloat(Shininess));
 
 	ID3DX11EffectScalarVariable* diffuseReflectance = m_Effect->GetVariableByName("gDiffuseReflectance")->AsScalar();
-	CallDirectX(diffuseReflectance->SetFloat(m_DiffuseReflectance));
+	CallDirectX(diffuseReflectance->SetFloat(DiffuseReflectance));
 
 	ID3DX11EffectSamplerVariable* sampleMode = m_Effect->GetVariableByName("sampleMode")->AsSampler();
-	switch (m_SampleMode)
+	switch (SampleMode)
 	{
 	case SampleMethod::point:
 		CallDirectX(sampleMode->SetSampler(0, m_pPointMode.get()));
@@ -223,9 +223,8 @@ void PhongMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& 
 		CallDirectX(sampleMode->SetSampler(0, m_pAnisotropicMode.get()));
 		break;
 	}
-	
 
-	switch (m_ActiveCullMode)
+	switch (CullMode)
 	{
 	case CullMode::none:
 		pDeviceContext->RSSetState(m_RasterizerStateCullNone.get());
@@ -266,6 +265,9 @@ void PhongMesh::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& 
 
 void PhongMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Scene& scene)
 {
+	softwareRendererHelper->WriteToDepthBuffer = true;
+	softwareRendererHelper->m_CullMode = CullMode;
+
     VertexStage(m_VertexData, m_VertexDataOut, scene.GetCamera());
 	m_TrianglesOut.clear();
 	softwareRendererHelper->GetTriangles(m_Indices.begin(), m_Indices.end(), m_VertexDataOut.begin(), m_TrianglesOut);
@@ -274,7 +276,7 @@ void PhongMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
     	ColorRGB finalColor{0};
 
 		Vector3 normal;
-		if (m_UseNormalMaps)
+		if (UseNormalMaps)
 		{
 			const Vector3 realNormal = vertexIn.normal.Normalized();
 			const Vector3 realTangent = vertexIn.tangent.Normalized();
@@ -306,18 +308,18 @@ void PhongMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
 
 		// lambert
 		const float observableArea = std::max<float>(0.0f, Vector3::Dot(-lightDirection, normal));
-		const ColorRGB lambert = (m_DiffuseReflectance * albedoTexture) / Utils::PI;
+		const ColorRGB lambert = (DiffuseReflectance * albedoTexture) / Utils::PI;
 
 		// Phong
 		const float specularReflectance = m_SpecularTexture->Sample(vertexIn.uv).r;
-		const float gloss = m_GlossTexture->Sample(vertexIn.uv).r * m_Shininess;
+		const float gloss = m_GlossTexture->Sample(vertexIn.uv).r * Shininess;
 
 		const Vector3 reflect = Vector3::Reflect(-lightDirection, normal);
 		const float cosAngle = std::max(0.0f,Vector3::Dot(reflect, -vertexIn.viewDirection));
 
 		const float phong = specularReflectance * std::pow(cosAngle, gloss);
 
-		switch (m_ShadingMode)
+		switch (ShadingMode)
 		{
 		case ShadingMode::observed_area:
 			finalColor = ColorRGB{observableArea};
@@ -371,23 +373,4 @@ void PhongMesh::SetWorldMatrix(const Matrix<float> matrix)
 	m_WorldMatrix = matrix;
 }
 
-void PhongMesh::ToggleNormalMap()
-{
-	m_UseNormalMaps = !m_UseNormalMaps;
-}
-
-void PhongMesh::SetShadingMode(const ShadingMode shadingMode)
-{
-	m_ShadingMode = shadingMode;
-}
-
-void PhongMesh::SetCullMode(const CullMode mode)
-{
-	m_ActiveCullMode = mode;
-}
-
-void PhongMesh::SetSamplelingMode(const SampleMethod shadingMode)
-{
-	m_SampleMode = shadingMode;
-}
 

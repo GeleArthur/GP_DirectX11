@@ -111,6 +111,9 @@ void FireFX::RenderDirectX(ID3D11DeviceContext *pDeviceContext, const Scene& sce
 
 void FireFX::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, const Scene& scene)
 {
+    softwareRendererHelper->WriteToDepthBuffer = false;
+    softwareRendererHelper->m_CullMode = CullMode::none;
+
     VertexStage(m_VertexData, m_VertexDataOut, scene.GetCamera());
 	m_TrianglesOut.clear();
 	softwareRendererHelper->GetTriangles(m_Indices.begin(), m_Indices.end(), m_VertexDataOut.begin(), m_TrianglesOut);
@@ -159,11 +162,6 @@ void FireFX::LoadMeshData(std::vector<FireFXData>&& vertexData, std::vector<uint
 void FireFX::SetWorldMatrix(const Matrix<float> matrix)
 {
 	m_WorldMatrix = matrix;
-}
-
-void FireFX::ToggleEnabled()
-{
-	m_IsEnabled = !m_IsEnabled;
 }
 
 bool FireFX::IsEnabled()

@@ -50,10 +50,13 @@ public:
                       const std::string& diffuseTextureFilePath, const std::string& normalMapTexture,
                       const std::string& glossTexture, const std::string& specularTexture);
     void SetWorldMatrix(Matrix<float> matrix) override;
-    void ToggleNormalMap();
-    void SetShadingMode(ShadingMode shadingMode);
-    void SetCullMode(CullMode mode);
-    void SetSamplelingMode(SampleMethod shadingMode);
+
+    bool UseNormalMaps{ true };
+    float DiffuseReflectance{ 7.0f };
+    float Shininess{ 25.0f };
+    ShadingMode ShadingMode{ ShadingMode::combined };
+    SampleMethod SampleMode{ SampleMethod::point };
+    CullMode CullMode{ CullMode::back };
 
 private:
     // -- SoftWare
@@ -61,11 +64,7 @@ private:
     std::vector<uint32_t> m_Indices;
     std::vector<PhongMeshDataVertexOut> m_VertexDataOut;
     std::vector<Triangle<PhongMeshDataVertexOut>> m_TrianglesOut;
-    bool m_UseNormalMaps{true};
-    float m_DiffuseReflectance{7.0f};
-    float m_Shininess{25.0f};
-    ShadingMode m_ShadingMode{ShadingMode::combined};
-    SampleMethod m_SampleMode{SampleMethod::point};
+
 
 
 
@@ -77,7 +76,6 @@ private:
     std::shared_ptr<Texture> m_NormalTexture{};
     std::shared_ptr<Texture> m_GlossTexture{};
     std::shared_ptr<Texture> m_SpecularTexture{};
-    CullMode m_ActiveCullMode;
     
     // --- HardWare ---
     ID3D11Device* m_pDevice{};

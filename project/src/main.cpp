@@ -18,8 +18,35 @@ void ShutDown(SDL_Window* pWindow)
 
 ID3D11Debug* d3d11Debug;
 
+constexpr static auto MAGENTA = "\033[35m";
+constexpr static auto YELLOW = "\033[33m";
+constexpr static auto GREEN = "\033[32m";
+constexpr static auto RESET = "\033[0m";
+
 int main(int argc, char* args[])
 {
+	std::cout << YELLOW << R"(
+[Key Bindings - SHARED]
+	[F1] Toggle Rasterizer Mode(HARDWARE / SOFTWARE)
+	[F2]  Toggle Vehicle Rotation(ON / OFF)
+	[F3] Toggle FireFX(ON / OFF)
+	[F9]  Cycle CullMode(BACK / FRONT / NONE)
+	[F10] Toggle Uniform ClearColor(ON / OFF)
+	[F11] Toggle Print FPS(ON / OFF))";
+
+	std::cout << GREEN << R"(
+[Key Bindings - HARDWARE]
+	[F4] Cycle Sampler State(POINT / LINEAR / ANISOTROPIC))";
+
+	std::cout << MAGENTA << R"(
+[Key Bindings - SOFTWARE]
+	[F5] Cycle Shading Mode(COMBINED / OBSERVED_AREA / DIFFUSE / SPECULAR)
+	[F6] Toggle NormalMap(ON / OFF)
+	[F7] Toggle DepthBuffer Visualization(ON / OFF)
+	[F8] Toggle BoundingBox Visualization(ON / OFF))";
+	std::cout << RESET << std::endl;
+
+
 	//Unreferenced parameters
 	(void)argc;
 	(void)args;
@@ -45,7 +72,7 @@ int main(int argc, char* args[])
 	Timer pTimer = Timer();
 	auto pRenderer = std::make_unique<RendererCombined>(pWindow);
 	bool renderSoftWare{};
-	bool printFps{true};
+	bool printFps{false};
 
 	//Start loop
 	pTimer.Start();
@@ -56,7 +83,6 @@ int main(int argc, char* args[])
 	
 	while (isLooping)
 	{
-		
 		//--------- Get input events ---------
 		SDL_Event e;
 		while (SDL_PollEvent(&e))
@@ -71,8 +97,12 @@ int main(int argc, char* args[])
 				// SHARED
 				if (e.key.keysym.scancode == SDL_SCANCODE_F1)
 				{
-					std::cout << "Toggle RenderMode\n";
 					renderSoftWare = !renderSoftWare;
+					std::cout << YELLOW << "**(SHARED) Rasterizer Mode = ";
+					if (renderSoftWare) std::cout << "SOFTWARE";
+					else std::cout << "HARDWARE";
+					std::cout << RESET << '\n';
+
 				}
 				if (e.key.keysym.scancode == SDL_SCANCODE_F2)
 				{
@@ -89,6 +119,11 @@ int main(int argc, char* args[])
 				if (e.key.keysym.scancode == SDL_SCANCODE_F11)
 				{
 					printFps = !printFps;
+					std::cout << YELLOW << "**(SHARED)Print FPS = ";
+					if (printFps) std::cout << "ON";
+					else std::cout << "OFF";
+					std::cout << RESET << '\n';
+					
 				}
 
 				// HARDWARE

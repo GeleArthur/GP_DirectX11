@@ -33,7 +33,7 @@ public:
 	void ToggleRotation();
 	void ToggleDepthBuffer() const;
 	void ToggleBoundingBoxDraw() const;
-	void ToggleNormalMap() const;
+	void ToggleNormalMap();
 	void NextShadingMode();
 	void DisableAllFireFx() const;
 
@@ -51,6 +51,7 @@ private:
 	Scene m_ActiveScene{};
 	bool m_UseSceneBackgroundColor{false};
 	CullMode m_ActiveCullMode{CullMode::back};
+	bool m_UseNormalMap{ true };
 	
 	// --------- Software ---------
 	std::unique_ptr<SoftwareRendererHelper> m_SoftwareHelper;

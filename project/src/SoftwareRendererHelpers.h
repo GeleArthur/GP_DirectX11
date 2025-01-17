@@ -123,7 +123,9 @@ public:
 
                     if (m_DepthBuffer[px + (py * m_Width)] >= depth)
                     {
-                        m_DepthBuffer[px + (py * m_Width)] = depth;
+                        if (WriteToDepthBuffer)
+							m_DepthBuffer[px + (py * m_Width)] = depth;
+
                         m_LastDepth = depth;
 
                         if (m_DrawDepthBuffer)
@@ -161,17 +163,30 @@ public:
                         ColorRGB finalColor = fragmentShader(VertexType::FromTuple(correctedVertex));
                         finalColor.MaxToOne();
 
+                        uint8_t red,green,blue,alpha;
+                        SDL_GetRGBA(reinterpret_cast<Uint32*>(m_BackBuffer->pixels)[px + (py * m_Width)], m_BackBuffer->format, &red,&green,&blue,&alpha);
+
+                        ColorRGB currentColor{ red/255.0f,green/255.0f,blue/255.0f,alpha/255.0f };
+                        ColorRGB newColor = finalColor.a * finalColor + currentColor * std::abs(1.0f-finalColor.a);
+
+
                         reinterpret_cast<Uint32*>(m_BackBuffer->pixels)[px + (py * m_Width)] = SDL_MapRGBA(m_BackBuffer->format,
-                                                           static_cast<uint8_t>(std::clamp(finalColor.r, 0.f, 1.0f) * 255),
-                                                           static_cast<uint8_t>(std::clamp(finalColor.g, 0.0f, 1.0f) * 255),
-                                                           static_cast<uint8_t>(std::clamp(finalColor.b, 0.0f, 1.0f) * 255),
-                                                           static_cast<uint8_t>(0)
+                                                           static_cast<uint8_t>(std::clamp(newColor.r, 0.f, 1.0f) * 255),
+                                                           static_cast<uint8_t>(std::clamp(newColor.g, 0.0f, 1.0f) * 255),
+                                                           static_cast<uint8_t>(std::clamp(newColor.b, 0.0f, 1.0f) * 255),
+                                                           static_cast<uint8_t>(std::clamp(newColor.a, 0.0f, 1.0f) * 255)
 															);
                     }
                 }
             }
         }
     }
+
+    CullMode m_CullMode{ CullMode::back };
+    bool m_DrawDepthBuffer{ false };
+    bool m_DrawBoundingBoxes{ false };
+    bool WriteToDepthBuffer{ true };
+
 
 private:
 
@@ -210,9 +225,7 @@ private:
     int m_Width;
     int m_Height;
     float m_LastDepth{};
-    CullMode m_CullMode{CullMode::back};
-    bool m_DrawDepthBuffer{false};
-    bool m_DrawBoundingBoxes{false};
+
 
     SDL_Surface* m_BackBuffer;
     std::vector<float> m_DepthBuffer{};
