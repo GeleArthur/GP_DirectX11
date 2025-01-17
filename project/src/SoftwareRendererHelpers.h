@@ -161,10 +161,12 @@ public:
                         ColorRGB finalColor = fragmentShader(VertexType::FromTuple(correctedVertex));
                         finalColor.MaxToOne();
 
-                        reinterpret_cast<uint32_t*>(m_BackBuffer->pixels)[px + (py * m_Width)] = SDL_MapRGB(m_BackBuffer->format,
+                        reinterpret_cast<Uint32*>(m_BackBuffer->pixels)[px + (py * m_Width)] = SDL_MapRGBA(m_BackBuffer->format,
                                                            static_cast<uint8_t>(std::clamp(finalColor.r, 0.f, 1.0f) * 255),
                                                            static_cast<uint8_t>(std::clamp(finalColor.g, 0.0f, 1.0f) * 255),
-                                                           static_cast<uint8_t>(std::clamp(finalColor.b, 0.0f, 1.0f) * 255));
+                                                           static_cast<uint8_t>(std::clamp(finalColor.b, 0.0f, 1.0f) * 255),
+                                                           static_cast<uint8_t>(0)
+															);
                     }
                 }
             }

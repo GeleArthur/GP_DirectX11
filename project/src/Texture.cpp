@@ -61,7 +61,7 @@ ID3D11ShaderResourceView* Texture::D3D11GetTexture2D() const
 
 ColorRGB Texture::Sample(const Vector2& uvCoord, bool normalMap) const
 {
-    Uint8 red, green, blue;
+    Uint8 red, green, blue, alpha;
     const Vector2 clamped = { std::clamp(uvCoord.x, 0.0f, 1.0f), std::clamp(uvCoord.y, 0.0f, 1.0f) };
 
     const uint32_t pixel = m_pSurfacePixels[
@@ -69,7 +69,8 @@ ColorRGB Texture::Sample(const Vector2& uvCoord, bool normalMap) const
         static_cast<int>(clamped.y * static_cast<float>(m_pSurface->h)) * (m_pSurface->w)
     ];
 
-    SDL_GetRGB(pixel, m_pSurface->format, &red, &green, &blue);
+    SDL_GetRGBA(pixel, m_pSurface->format, &red, &green, &blue, &alpha);
+
     
-    return ColorRGB{static_cast<float>(red) / 255.0f, static_cast<float>(green) / 255.0f, static_cast<float>(blue) / (normalMap ? 255.0f : 128.0f)};
+    return ColorRGB{static_cast<float>(red) / 255.0f, static_cast<float>(green) / 255.0f, static_cast<float>(blue) / (normalMap ? 255.0f : 128.0f), static_cast<float>(alpha)/ 255.0f};
 }

@@ -38,7 +38,7 @@ void Scene::Update(Timer const& time)
         m_RotatedAmount += time.GetElapsed();
         for (auto& mesh : m_MeshesToRender)
         {
-            mesh->SetWorldMatrix(Matrix<float>::CreateRotationY(m_RotatedAmount));
+            mesh->SetWorldMatrix(Matrix<float>::CreateRotationY(m_RotatedAmount) * Matrix<float>::CreateTranslation(0, 0, 50));
         }
     }
 }

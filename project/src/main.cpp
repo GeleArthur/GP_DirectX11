@@ -27,8 +27,8 @@ int main(int argc, char* args[])
 	//Create window + surfaces
 	SDL_Init(SDL_INIT_VIDEO);
 
-	const uint32_t width = 1920;
-	const uint32_t height = 1080;
+	const uint32_t width = 640;
+	const uint32_t height = 480;
 
 	SDL_Window* pWindow = SDL_CreateWindow(
 		"DirectX/CPU - Arthur van den Barselaar 2GD10",

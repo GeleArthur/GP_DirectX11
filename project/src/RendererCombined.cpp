@@ -155,7 +155,7 @@ void RendererCombined::InitSoftware()
 
 void RendererCombined::LoadScene()
 {
-	m_ActiveScene.SetupCamera(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,-50.0f});
+	m_ActiveScene.SetupCamera(static_cast<float>(m_Width)/ static_cast<float>(m_Height), 45, {0,0,0.0f}, 0.1f, 100.0f);
 	m_ActiveScene.SetBackGroundColor({0.1f,0.1f,0.1f});
 
 	{
@@ -171,6 +171,7 @@ void RendererCombined::LoadScene()
 		
 		auto meshVechicle = std::make_unique<PhongMesh>(m_pDevice);
 		meshVechicle->LoadMeshData(std::move(phongData), std::move(vechicle.indices), "Resources/vehicle_diffuse.png", "Resources/vehicle_normal.png", "Resources/vehicle_gloss.png", "Resources/vehicle_specular.png");
+		meshVechicle->SetWorldMatrix(Matrix<float>::CreateTranslation(0, 0, 50.0f));
 		m_ActiveScene.AddMesh(std::move(meshVechicle));
 	}
 	{
@@ -184,9 +185,10 @@ void RendererCombined::LoadScene()
 			fireFXData.emplace_back(fireFXModel.positions[i], fireFXModel.uv[i]);
 		}
 		
-		auto meshVechicle = std::make_unique<FireFX>(m_pDevice);
-		meshVechicle->LoadMeshData(std::move(fireFXData), std::move(fireFXModel.indices), "Resources/fireFX_diffuse.png");
-		m_ActiveScene.AddMesh(std::move(meshVechicle));
+		auto fireFX = std::make_unique<FireFX>(m_pDevice);
+		fireFX->SetWorldMatrix(Matrix<float>::CreateTranslation(0, 0, 50.0f));
+		fireFX->LoadMeshData(std::move(fireFXData), std::move(fireFXModel.indices), "Resources/fireFX_diffuse.png");
+		m_ActiveScene.AddMesh(std::move(fireFX));
 	}
 	
 	// auto plane = Utils::ParseOBJ("resources/plane.obj", false);
@@ -381,7 +383,7 @@ void RendererCombined::RenderSoftware() const
 	uint8_t red, green, blue;
 	if (m_UseSceneBackgroundColor)
 	{
-		auto [r, g, b] = m_ActiveScene.GetBackGroundColor();
+		auto [r, g, b, a] = m_ActiveScene.GetBackGroundColor();
 		red = static_cast<uint8_t>(r * 255u);
 		green = static_cast<uint8_t>(g * 255u);
 		blue = static_cast<uint8_t>(b * 255u);

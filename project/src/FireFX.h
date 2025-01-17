@@ -53,7 +53,7 @@ private:
     std::vector<uint32_t> m_Indices;
     std::vector<FireFXDataVertexOut> m_VertexDataOut;
     std::vector<Triangle<FireFXDataVertexOut>> m_TrianglesOut;
-    bool m_IsEnabled;
+    bool m_IsEnabled{true};
 
     void VertexStage(const std::vector<FireFXData>& vertices_in, std::vector<FireFXDataVertexOut>& vertices_out, const Camera& camera) const;
 
