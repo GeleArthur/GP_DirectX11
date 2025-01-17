@@ -164,7 +164,7 @@ void RendererCombined::LoadScene()
 	m_ActiveScene.SetBackGroundColor({0.1f,0.1f,0.1f});
 
 	{
-		Utils::ParsedObj vechicle = Utils::ParseOBJ("resources/vehicle2obj.obj", false);
+		Utils::ParsedObj vechicle = Utils::ParseOBJ("resources/vehicle.obj", false);
 		
 		std::vector<PhongMeshData> phongData;
 		phongData.reserve(vechicle.indices.size());

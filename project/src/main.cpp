@@ -119,7 +119,7 @@ int main(int argc, char* args[])
 				if (e.key.keysym.scancode == SDL_SCANCODE_F11)
 				{
 					printFps = !printFps;
-					std::cout << YELLOW << "**(SHARED)Print FPS = ";
+					std::cout << YELLOW << "**(SHARED) Print FPS = ";
 					if (printFps) std::cout << "ON";
 					else std::cout << "OFF";
 					std::cout << RESET << '\n';

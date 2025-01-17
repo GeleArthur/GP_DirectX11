@@ -335,8 +335,6 @@ void PhongMesh::RenderSoftware(SoftwareRendererHelper* softwareRendererHelper, c
 			break;
 		}
 
-		// finalColor = ColorRGB{phong};
-
 		return finalColor;
     });
 }
