@@ -119,9 +119,6 @@ HRESULT RendererCombined::InitializeDirectX()
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	m_pDeviceContext->RSSetViewports(1, &viewport);
-
-
-
 	
 	D3D11_SAMPLER_DESC config{};
 	config.Filter = D3D11_FILTER_ANISOTROPIC;
